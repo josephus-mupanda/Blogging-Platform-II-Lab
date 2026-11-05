@@ -4,20 +4,18 @@ type Query {
   post(id: ID!): Post
   users: [User!]!
   user(id: ID!): User
-  me: User
   tags: [Tag!]!
   tag(id: ID!): Tag
   comments(postId: ID!): [Comment!]!
   comment(postId: ID!, id: ID!): Comment
   reviews(postId: ID!): Discussion
   dashboard: Dashboard
-  trash(kind: Kind!): [ArchivedItem!]!
 }
 
 type Mutation {
   register(input: Registration!): User
   updateUser(id: ID!, input: AccountUpdate!): User
-  setUserActive(id: ID!, active: Boolean!): User
+  deactivateUser(id: ID!): User
   createPost(input: PostInput!): Post
   updatePost(id: ID!, input: PostInput!): Post
   archivePost(id: ID!): Boolean
@@ -28,12 +26,10 @@ type Mutation {
   updateComment(postId: ID!, id: ID!, input: CommentInput!): Comment
   archiveComment(postId: ID!, id: ID!): Boolean
   addReview(postId: ID!, input: ReviewInput!): Review
-  restore(kind: Kind!, id: ID!): Boolean
 }
 
 enum Role { ADMIN AUTHOR READER }
 enum Sort { NEWEST OLDEST TITLE_ASC TITLE_DESC }
-enum Kind { POST COMMENT TAG }
 
 input Registration { username: String!, email: String!, password: String!, displayName: String!, role: Role! }
 input AccountUpdate { email: String!, displayName: String! }
@@ -50,16 +46,12 @@ type Tag { id: ID!, name: String! }
 type Comment { id: ID!, postId: ID!, authorId: ID!, authorName: String!, body: String!, createdAt: String! }
 type Review { id: ID!, postId: ID!, reviewerId: ID!, reviewerName: String!, rating: Int!, text: String, createdAt: String! }
 type Discussion { reviews: [Review!]!, averageRating: Float! }
-type ArchivedItem { kind: Kind!, id: ID!, label: String!, deletedAt: String! }
-type TagUsage { name: String!, posts: Long! }
 type Dashboard {
   users: Long!
   posts: Long!
   tags: Long!
   comments: Long!
   reviews: Long!
-  recentPosts: [Post!]!
-  tagUsage: [TagUsage!]!
 }
 
 scalar Long

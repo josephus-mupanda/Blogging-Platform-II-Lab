@@ -3,6 +3,16 @@
 
 A Java 21 and Spring Boot 3.5 backend that exposes the Blogging Platform I data and workflows over REST and GraphQL. PostgreSQL stores accounts, posts, and tags. MongoDB stores comments and reviews.
 
+## Lab requirements
+
+| Epic | What to show |
+|---|---|
+| 1. Setup | The `dev`, `test`, and `prod` configuration files and the constructor in `PostController`. |
+| 2. REST | CRUD for users, posts, comments, and tags in Swagger. Search posts with `keyword`, `sort`, `page`, and `size` and show the `status`, `message`, and `data` response. |
+| 3. Validation | Try registering with an existing username. `UniqueAccountValidator` checks the database, and `ApiErrors` formats the error response. |
+| 4. GraphQL | Run the post search and a comment mutation from [examples.graphql](docs/examples.graphql) in GraphiQL. |
+| 5. AOP and performance | Call post search and the dashboard with timing logs enabled. Use the [performance report](docs/performance-report.md) to explain the indexes and compare the two APIs. |
+
 ## Run locally
 
 Install JDK 21, PostgreSQL with `pg_trgm`, and MongoDB. The project includes a Maven wrapper. From the repository root, create the development database and start the app.
@@ -38,16 +48,14 @@ Open Swagger UI at [localhost:8080/swagger-ui/index.html](http://localhost:8080/
 
 | Routes | Operations |
 |---|---|
-| `/api/users`, `/api/users/{id}`, `/api/users/me` | Register, list as admin, read or update an account, deactivate as admin |
-| `PATCH /api/users/{id}/status` | Set `{"active": true}` or `{"active": false}` as admin |
+| `/api/users`, `/api/users/{id}` | Register, list as admin, read or update an account, deactivate as admin |
 | `/api/posts`, `/api/posts/{id}` | Browse, read, create, edit, and archive posts |
 | `/api/tags`, `/api/tags/{id}` | Browse and read tags, or create, rename, and archive them as admin |
 | `/api/posts/{postId}/comments`, `/api/posts/{postId}/comments/{id}` | List, read, add, edit, and archive comments |
 | `/api/posts/{postId}/reviews` | List reviews with the average rating, or submit a review |
-| `/api/dashboard` | View counts, recent posts, and tag usage with an active account |
-| `/api/trash/{kind}`, `POST /api/trash/{kind}/{id}/restore` | Inspect and restore archived items as admin. Use `POST`, `COMMENT`, or `TAG` for `kind` and send `{}` as JSON when restoring. |
+| `/api/dashboard` | Count users, visible posts, tags, comments, and reviews with an active account |
 
-Public clients can browse posts and their discussions. Active readers can comment and leave one review per post. Authors can also create posts. Authors and commenters can edit or archive their own content, and administrators can act on any content. Archiving a post hides its comments and reviews until the post is restored. Comments archived separately stay in Trash until restored separately. Archived titles and tag names remain reserved.
+Public clients can browse posts and their discussions. Active readers can comment and leave one review per post. Authors can also create posts. Authors and commenters can edit or delete their own content, and administrators can act on any content. Deleting a user disables sign-in and preserves the account's existing content. Deleting a post, comment, or tag marks it as deleted in storage. Deleted posts and their discussions are hidden from readers, and archived titles and tag names remain reserved.
 
 ```powershell
 curl.exe "http://localhost:8080/api/posts?keyword=spring&page=0&size=10&sort=NEWEST"
@@ -80,10 +88,14 @@ $env:RUN_BLOG_INTEGRATION_TESTS = 'true'
 .\mvnw.cmd verify
 ```
 
-Use `TEST_POSTGRES_URL` and `TEST_MONGO_URI` to select dedicated test stores. The test creates unique fixtures and leaves them in those stores. The suite checks the two HTTP APIs, compatibility with legacy credentials and MongoDB records, authorization, filtering, validation, and Trash.
+Use `TEST_POSTGRES_URL` and `TEST_MONGO_URI` to select dedicated test stores. The test creates unique fixtures and leaves them in those stores. The suite checks both HTTP APIs, compatibility with legacy credentials and MongoDB records, authorization, filtering, validation, and deletion.
 
 Controllers delegate to constructor-injected services and repositories. Spring's `JdbcClient` runs parameterized queries and `MongoTemplate` works with the legacy documents. PostgreSQL performs filtering, ordering, and pagination before rows reach the API. Each result page loads tags in one query and groups them by post ID in memory.
 
-`ServiceMonitoring` uses `@Before` and `@After` for service entry and exit logs and `@Around` to time successful and failed calls. Enable `logging.level.com.example.Blogging_Platform_II.config.ServiceMonitoring=DEBUG` to see these logs. An administrator can read the `blog.service.duration` timer at `/actuator/metrics/blog.service.duration`.
+`ServiceMonitoring` uses `@Before` and `@After` for service entry and exit logs and `@Around` to log elapsed time for CRUD and analytics calls. Start the app with the command below, then call the post search or dashboard endpoint to see the timings.
+
+```powershell
+.\mvnw.cmd spring-boot:run '-Dspring-boot.run.arguments=--logging.level.com.example.Blogging_Platform_II.config.ServiceMonitoring=DEBUG'
+```
 
 See the [performance report](docs/performance-report.md) for measurements and reproduction steps. The [Platform II lab brief](Blogging-Platform-II.md) describes the requirements.

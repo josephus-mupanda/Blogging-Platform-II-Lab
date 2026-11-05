@@ -9,9 +9,9 @@ The measurements were taken on 5 November 2026 using Java 21.0.2, Spring Boot 3.
 
 | Variant | p50 | p95 | Mean payload |
 |---|---:|---:|---:|
-| REST | 27.40 ms | 47.04 ms | 9,781 bytes |
-| GraphQL, full post fields | 31.60 ms | 50.62 ms | 9,787 bytes |
-| GraphQL, post IDs and titles | 29.73 ms | 51.25 ms | 545 bytes |
+| REST | 32.84 ms | 52.20 ms | 9,781 bytes |
+| GraphQL, full post fields | 35.12 ms | 55.64 ms | 9,787 bytes |
+| GraphQL, post IDs and titles | 33.92 ms | 53.49 ms | 545 bytes |
 
 The compact GraphQL response used 94.4% fewer bytes than REST. REST had the lowest median and p95 latency on this machine.
 

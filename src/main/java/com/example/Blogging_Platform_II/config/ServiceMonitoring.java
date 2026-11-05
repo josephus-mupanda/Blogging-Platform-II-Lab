@@ -1,8 +1,6 @@
 
 package com.example.Blogging_Platform_II.config;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -20,11 +18,6 @@ import org.springframework.stereotype.Component;
 public class ServiceMonitoring {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceMonitoring.class);
     private static final String SERVICES = "execution(public * com.example.Blogging_Platform_II.service.*Service.*(..))";
-    private final MeterRegistry metrics;
-
-    public ServiceMonitoring(MeterRegistry metrics) {
-        this.metrics = metrics;
-    }
 
     @Before(SERVICES)
     public void entering(JoinPoint call) {
@@ -47,8 +40,6 @@ public class ServiceMonitoring {
         } finally {
             long elapsed = System.nanoTime() - start;
             String operation = call.getSignature().toShortString();
-            metrics.timer("blog.service.duration", "operation", operation, "outcome", outcome)
-                    .record(elapsed, TimeUnit.NANOSECONDS);
             LOG.debug("{} {} in {} ms", operation, outcome, elapsed / 1_000_000.0);
         }
     }

@@ -116,35 +116,30 @@ class BloggingApiIntegrationTests {
         mvc.perform(get(path + "/reviews")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.averageRating").value(4.0));
 
+        mvc.perform(auth(delete("/api/tags/" + tagId), admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/tags/" + tagId)).andExpect(status().isNotFound());
+        mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.data.tags").isEmpty());
+
+        var countsBeforeDelete = data(auth(get("/api/dashboard"), admin), 200);
         mvc.perform(auth(delete(path), author)).andExpect(status().isOk());
+        mvc.perform(get(path)).andExpect(status().isNotFound());
         mvc.perform(get(path + "/comments")).andExpect(status().isNotFound());
         mvc.perform(get(path + "/reviews")).andExpect(status().isNotFound());
-        mvc.perform(request(post("/api/trash/COMMENT/" + commentId + "/restore"), admin, Map.of()))
-                .andExpect(status().isConflict());
-        mvc.perform(request(post("/api/trash/POST/" + postId + "/restore"), admin, Map.of()))
-                .andExpect(status().isOk());
-        mvc.perform(request(post("/api/trash/COMMENT/" + commentId + "/restore"), admin, Map.of()))
-                .andExpect(status().isOk());
-        mvc.perform(get(path + "/comments")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(2));
-        mvc.perform(auth(delete("/api/tags/" + tagId), admin)).andExpect(status().isOk());
-        mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.data.tags").isEmpty());
-        mvc.perform(request(post("/api/trash/TAG/" + tagId + "/restore"), admin, Map.of()))
-                .andExpect(status().isOk());
-        mvc.perform(auth(get("/api/dashboard"), admin)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.tagUsage").isArray());
+        graph(admin, "query { dashboard { posts comments reviews } }")
+                .andExpect(jsonPath("$.data.dashboard.posts").value(countsBeforeDelete.path("posts").asInt() - 1))
+                .andExpect(jsonPath("$.data.dashboard.comments").value(countsBeforeDelete.path("comments").asInt() - 1))
+                .andExpect(jsonPath("$.data.dashboard.reviews").value(countsBeforeDelete.path("reviews").asInt() - 1));
 
-        mvc.perform(auth(delete("/api/users/" + readerId), admin)).andExpect(status().isOk());
-        mvc.perform(auth(get("/api/users/me"), reader)).andExpect(status().isUnauthorized());
-        mvc.perform(request(patch("/api/users/" + readerId + "/status"), admin, Map.of("active", true)))
-                .andExpect(status().isOk());
-        mvc.perform(auth(get("/api/users/me"), reader)).andExpect(status().isOk());
+        mvc.perform(auth(get("/api/users/" + readerId), reader)).andExpect(status().isOk());
+        mvc.perform(auth(delete("/api/users/" + readerId), admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.active").value(false));
+        mvc.perform(auth(get("/api/users/" + readerId), reader)).andExpect(status().isUnauthorized());
+        graph(admin, "mutation { deactivateUser(id: \"" + authorId + "\") { active } }")
+                .andExpect(jsonPath("$.data.deactivateUser.active").value(false));
         mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/posts']").exists());
         mvc.perform(get("/graphiql")).andExpect(status().isTemporaryRedirect());
         mvc.perform(get("/graphiql").param("path", "/graphql")).andExpect(status().isOk());
-        mvc.perform(auth(get("/actuator/metrics/blog.service.duration"), admin)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.measurements").isArray());
 
         assertThat(authorAccount.has("email")).isFalse();
     }

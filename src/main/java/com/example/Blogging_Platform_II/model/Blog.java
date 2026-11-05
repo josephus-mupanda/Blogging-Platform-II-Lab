@@ -12,7 +12,6 @@ public final class Blog {
 
     public enum Role { ADMIN, AUTHOR, READER }
     public enum Sort { NEWEST, OLDEST, TITLE_ASC, TITLE_DESC }
-    public enum Kind { POST, COMMENT, TAG }
 
     public record User(long id, String username, String displayName, Role role, boolean active) {}
     public record Account(User user, String passwordHash) {}
@@ -21,10 +20,7 @@ public final class Blog {
                        String updatedAt, List<Tag> tags) {}
     public record PostPage(List<Post> items, int page, int size, long totalElements, long totalPages) {}
     public record PostFilter(String keyword, Long authorId, Long tagId, Integer page, Integer size, Sort sort) {}
-    public record ArchivedItem(Kind kind, String id, String label, String deletedAt) {}
-    public record TagUsage(String name, long posts) {}
-    public record Dashboard(long users, long posts, long tags, long comments, long reviews,
-                            List<Post> recentPosts, List<TagUsage> tagUsage) {}
+    public record Dashboard(long users, long posts, long tags, long comments, long reviews) {}
 
     @Document("comments")
     @CompoundIndex(name = "postId_1_createdAt_1", def = "{'postId': 1, 'createdAt': 1}")

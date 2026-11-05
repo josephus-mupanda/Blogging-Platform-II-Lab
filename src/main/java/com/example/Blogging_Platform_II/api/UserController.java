@@ -5,7 +5,6 @@ import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
 
 import com.example.Blogging_Platform_II.api.Requests.Registration;
 import com.example.Blogging_Platform_II.api.Requests.AccountUpdate;
-import com.example.Blogging_Platform_II.api.Requests.AccountStatus;
 import com.example.Blogging_Platform_II.model.Blog.User;
 import com.example.Blogging_Platform_II.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -14,7 +13,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -38,12 +36,6 @@ public class UserController {
         return ok("Users found.", users.list());
     }
 
-    @GetMapping("/me")
-    @SecurityRequirement(name = "basicAuth")
-    ApiEnvelope<User> me() {
-        return ok("Account found.", users.me());
-    }
-
     @GetMapping("/{id}")
     @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<User> get(@PathVariable long id) {
@@ -62,15 +54,9 @@ public class UserController {
         return ok("User updated.", users.update(id, input));
     }
 
-    @PatchMapping("/{id}/status")
-    @SecurityRequirement(name = "basicAuth")
-    ApiEnvelope<User> status(@PathVariable long id, @Valid @RequestBody AccountStatus input) {
-        return ok("Account status updated.", users.setActive(id, input.active()));
-    }
-
     @DeleteMapping("/{id}")
     @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<User> deactivate(@PathVariable long id) {
-        return ok("User deactivated.", users.setActive(id, false));
+        return ok("User deactivated.", users.deactivate(id));
     }
 }

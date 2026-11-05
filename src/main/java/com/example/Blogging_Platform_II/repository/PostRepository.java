@@ -1,16 +1,11 @@
 
 package com.example.Blogging_Platform_II.repository;
 
-import com.example.Blogging_Platform_II.model.Blog.ArchivedItem;
-import com.example.Blogging_Platform_II.model.Blog.Kind;
 import com.example.Blogging_Platform_II.model.Blog.Post;
 import com.example.Blogging_Platform_II.model.Blog.PostPage;
 import com.example.Blogging_Platform_II.model.Blog.Sort;
 import com.example.Blogging_Platform_II.model.Blog.Tag;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -102,23 +97,12 @@ public class PostRepository {
         jdbc.sql("UPDATE posts SET deleted_at = now() WHERE post_id = :id").param("id", id).update();
     }
 
-    public boolean restore(long id) {
-        return jdbc.sql("UPDATE posts SET deleted_at = NULL WHERE post_id = :id AND deleted_at IS NOT NULL")
-                .param("id", id).update() == 1;
-    }
-
-    public List<ArchivedItem> archived() {
-        return jdbc.sql("SELECT post_id, title, deleted_at FROM posts WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")
-                .query((row, number) -> archived(row, Kind.POST)).list();
+    public long countVisible() {
+        return jdbc.sql("SELECT count(*) FROM posts WHERE deleted_at IS NULL").query(Long.class).single();
     }
 
     public List<Long> archivedIds() {
         return jdbc.sql("SELECT post_id FROM posts WHERE deleted_at IS NOT NULL").query(Long.class).list();
-    }
-
-    static ArchivedItem archived(ResultSet row, Kind kind) throws SQLException {
-        return new ArchivedItem(kind, row.getString(1), row.getString(2),
-                row.getObject(3, OffsetDateTime.class).toInstant().toString());
     }
 
     private List<Post> withTags(List<Post> posts) {

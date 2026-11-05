@@ -80,7 +80,7 @@ public class DiscussionService {
     }
 
     private Comment findComment(long postId, String id) {
-        return discussion.comment(postId, id, false).orElseThrow(() -> ApiException.notFound("Comment"));
+        return discussion.comment(postId, id).orElseThrow(() -> ApiException.notFound("Comment"));
     }
 
     private void requireVisible(long postId) {

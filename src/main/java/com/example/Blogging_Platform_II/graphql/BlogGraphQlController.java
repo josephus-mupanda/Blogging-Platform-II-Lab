@@ -15,14 +15,12 @@ import com.example.Blogging_Platform_II.model.Blog.Tag;
 import com.example.Blogging_Platform_II.model.Blog.Comment;
 import com.example.Blogging_Platform_II.model.Blog.Discussion;
 import com.example.Blogging_Platform_II.model.Blog.Dashboard;
-import com.example.Blogging_Platform_II.model.Blog.ArchivedItem;
-import com.example.Blogging_Platform_II.model.Blog.Kind;
 import com.example.Blogging_Platform_II.model.Blog.Review;
 import com.example.Blogging_Platform_II.service.UserService;
 import com.example.Blogging_Platform_II.service.PostService;
 import com.example.Blogging_Platform_II.service.TagService;
 import com.example.Blogging_Platform_II.service.DiscussionService;
-import com.example.Blogging_Platform_II.service.AdminService;
+import com.example.Blogging_Platform_II.service.AnalyticsService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -36,15 +34,15 @@ public class BlogGraphQlController {
     private final PostService posts;
     private final TagService tags;
     private final DiscussionService discussion;
-    private final AdminService admin;
+    private final AnalyticsService analytics;
 
     public BlogGraphQlController(UserService users, PostService posts, TagService tags,
-                                 DiscussionService discussion, AdminService admin) {
+                                 DiscussionService discussion, AnalyticsService analytics) {
         this.users = users;
         this.posts = posts;
         this.tags = tags;
         this.discussion = discussion;
-        this.admin = admin;
+        this.analytics = analytics;
     }
 
     @QueryMapping
@@ -65,11 +63,6 @@ public class BlogGraphQlController {
     @QueryMapping
     public User user(@Argument long id) {
         return users.get(id);
-    }
-
-    @QueryMapping
-    public User me() {
-        return users.me();
     }
 
     @QueryMapping
@@ -99,12 +92,7 @@ public class BlogGraphQlController {
 
     @QueryMapping
     public Dashboard dashboard() {
-        return admin.dashboard();
-    }
-
-    @QueryMapping
-    public List<ArchivedItem> trash(@Argument Kind kind) {
-        return admin.trash(kind);
+        return analytics.dashboard();
     }
 
     @MutationMapping
@@ -118,8 +106,8 @@ public class BlogGraphQlController {
     }
 
     @MutationMapping
-    public User setUserActive(@Argument long id, @Argument boolean active) {
-        return users.setActive(id, active);
+    public User deactivateUser(@Argument long id) {
+        return users.deactivate(id);
     }
 
     @MutationMapping
@@ -175,9 +163,4 @@ public class BlogGraphQlController {
         return discussion.addReview(postId, input);
     }
 
-    @MutationMapping
-    public boolean restore(@Argument Kind kind, @Argument String id) {
-        admin.restore(kind, id);
-        return true;
-    }
 }

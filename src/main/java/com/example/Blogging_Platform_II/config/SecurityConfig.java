@@ -29,18 +29,12 @@ public class SecurityConfig {
     SecurityFilterChain security(HttpSecurity http, ObjectMapper json) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessions -> sessions.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(routes -> routes.requestMatchers("/actuator/metrics/**").hasRole("ADMIN")
-                        .anyRequest().permitAll())
+                .authorizeHttpRequests(routes -> routes.anyRequest().permitAll())
                 .httpBasic(basic -> basic.authenticationEntryPoint((request, response, exception) -> {
                     response.setStatus(401);
                     response.setHeader("WWW-Authenticate", "Basic realm=\"Blogging Platform\"");
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     json.writeValue(response.getOutputStream(), ApiEnvelope.error("Invalid credentials.", null));
-                }))
-                .exceptionHandling(errors -> errors.accessDeniedHandler((request, response, exception) -> {
-                    response.setStatus(403);
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    json.writeValue(response.getOutputStream(), ApiEnvelope.error("Administrator access is required.", null));
                 }))
                 .build();
     }

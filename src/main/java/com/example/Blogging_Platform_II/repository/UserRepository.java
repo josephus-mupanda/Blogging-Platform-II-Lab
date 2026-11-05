@@ -61,10 +61,10 @@ public class UserRepository {
                 .param("id", id).param("email", email).param("name", name).query(USER).optional();
     }
 
-    public Optional<User> setActive(long id, boolean active) {
+    public Optional<User> deactivate(long id) {
         return jdbc.sql("""
-                UPDATE users SET active = :active WHERE user_id = :id AND role <> 'ADMIN' RETURNING
-                """ + COLUMNS).param("id", id).param("active", active).query(USER).optional();
+                UPDATE users SET active = false WHERE user_id = :id AND role <> 'ADMIN' RETURNING
+                """ + COLUMNS).param("id", id).query(USER).optional();
     }
 
     public long count() {

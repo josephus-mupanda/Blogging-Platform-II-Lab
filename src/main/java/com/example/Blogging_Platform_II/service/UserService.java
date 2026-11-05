@@ -33,10 +33,6 @@ public class UserService {
         return users.find(id).orElseThrow(() -> ApiException.notFound("User"));
     }
 
-    public User me() {
-        return actors.current();
-    }
-
     public User register(Registration input) {
         if (input.role() == Role.ADMIN) {
             throw ApiException.badRequest("Sign up as an author or reader.");
@@ -54,12 +50,12 @@ public class UserService {
                 .orElseThrow(() -> ApiException.notFound("User"));
     }
 
-    public User setActive(long id, boolean active) {
+    public User deactivate(long id) {
         actors.admin();
         User user = users.find(id).orElseThrow(() -> ApiException.notFound("User"));
         if (user.role() == Role.ADMIN) {
             throw ApiException.forbidden("Administrator accounts are protected.");
         }
-        return users.setActive(id, active).orElseThrow(() -> ApiException.notFound("User"));
+        return users.deactivate(id).orElseThrow(() -> ApiException.notFound("User"));
     }
 }

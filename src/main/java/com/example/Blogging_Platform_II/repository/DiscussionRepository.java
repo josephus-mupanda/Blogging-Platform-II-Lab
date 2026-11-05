@@ -29,17 +29,8 @@ public class DiscussionRepository {
         return mongo.find(query(where("postId").is(postId).and("deletedAt").isNull()).with(OLDEST), Comment.class);
     }
 
-    public Optional<Comment> comment(long postId, String id, boolean archived) {
-        return Optional.ofNullable(mongo.findOne(query(commentCriteria(postId, id, archived)), Comment.class));
-    }
-
-    public Optional<Comment> archivedComment(String id) {
-        return Optional.ofNullable(mongo.findOne(query(where("id").is(id).and("deletedAt").ne(null)), Comment.class));
-    }
-
-    public List<Comment> archived() {
-        return mongo.find(query(where("deletedAt").ne(null)).with(Sort.by(Sort.Direction.DESC, "deletedAt")),
-                Comment.class);
+    public Optional<Comment> comment(long postId, String id) {
+        return Optional.ofNullable(mongo.findOne(query(visibleComment(postId, id)), Comment.class));
     }
 
     public Comment insert(Comment comment) {
@@ -47,17 +38,12 @@ public class DiscussionRepository {
     }
 
     public Optional<Comment> edit(long postId, String id, String body) {
-        return Optional.ofNullable(mongo.findAndModify(query(commentCriteria(postId, id, false)),
+        return Optional.ofNullable(mongo.findAndModify(query(visibleComment(postId, id)),
                 Update.update("body", body), FindAndModifyOptions.options().returnNew(true), Comment.class));
     }
 
     public boolean archive(long postId, String id) {
-        return mongo.updateFirst(query(commentCriteria(postId, id, false)), Update.update("deletedAt", Instant.now()),
-                Comment.class).getModifiedCount() == 1;
-    }
-
-    public boolean restore(long postId, String id) {
-        return mongo.updateFirst(query(commentCriteria(postId, id, true)), new Update().unset("deletedAt"),
+        return mongo.updateFirst(query(visibleComment(postId, id)), Update.update("deletedAt", Instant.now()),
                 Comment.class).getModifiedCount() == 1;
     }
 
@@ -77,8 +63,7 @@ public class DiscussionRepository {
         return mongo.count(query(where("postId").nin(archivedIds)), Review.class);
     }
 
-    private Criteria commentCriteria(long postId, String id, boolean archived) {
-        Criteria criteria = where("postId").is(postId).and("id").is(id).and("deletedAt");
-        return archived ? criteria.ne(null) : criteria.isNull();
+    private Criteria visibleComment(long postId, String id) {
+        return where("postId").is(postId).and("id").is(id).and("deletedAt").isNull();
     }
 }

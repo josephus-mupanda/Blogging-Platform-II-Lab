@@ -28,8 +28,11 @@ mutation AddPost($tagIds: [ID!]) {
   }
 }
 
-mutation CommentAndReview($postId: ID!) {
+mutation AddComment($postId: ID!) {
   addComment(postId: $postId, input: {body: "Thanks for the article."}) { id body }
+}
+
+mutation AddReview($postId: ID!) {
   addReview(postId: $postId, input: {rating: 5, text: "Helpful."}) { id rating }
 }
 
@@ -40,10 +43,9 @@ mutation CreateTag {
 query AdminOverview {
   users { id username role active }
   tags { id name }
-  dashboard { posts comments reviews tagUsage { name posts } }
-  trash(kind: POST) { id label deletedAt }
+  dashboard { users posts tags comments reviews }
 }
 
-mutation RestorePost($id: ID!) {
-  restore(kind: POST, id: $id)
+mutation ArchivePost($id: ID!) {
+  archivePost(id: $id)
 }

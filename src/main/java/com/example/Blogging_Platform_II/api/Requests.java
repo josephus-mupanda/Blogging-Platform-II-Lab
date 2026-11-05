@@ -41,8 +41,6 @@ public final class Requests {
         }
     }
 
-    public record AccountStatus(@NotNull Boolean active) {}
-
     public record PostInput(@NotBlank @Size(max = 200) String title, @NotBlank String body,
                             @Size(max = 100) List<@NotNull @Positive Long> tagIds) {
         public PostInput {
