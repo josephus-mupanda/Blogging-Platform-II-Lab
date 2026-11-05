@@ -11,11 +11,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class TagService {
     private final TagRepository tags;
-    private final Actors actors;
 
-    public TagService(TagRepository tags, Actors actors) {
+    public TagService(TagRepository tags) {
         this.tags = tags;
-        this.actors = actors;
     }
 
     public List<Tag> list() {
@@ -27,17 +25,14 @@ public class TagService {
     }
 
     public Tag create(TagInput input) {
-        actors.admin();
         return tags.insert(input.name());
     }
 
     public Tag update(long id, TagInput input) {
-        actors.admin();
         return tags.update(id, input.name()).orElseThrow(() -> ApiException.notFound("Tag"));
     }
 
     public void archive(long id) {
-        actors.admin();
         if (!tags.archive(id)) {
             throw ApiException.notFound("Tag");
         }

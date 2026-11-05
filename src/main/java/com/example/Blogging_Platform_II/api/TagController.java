@@ -6,7 +6,6 @@ import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
 import com.example.Blogging_Platform_II.api.Requests.TagInput;
 import com.example.Blogging_Platform_II.model.Blog.Tag;
 import com.example.Blogging_Platform_II.service.TagService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -41,21 +40,18 @@ public class TagController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<Tag> create(@Valid @RequestBody TagInput input) {
         return ok("Tag created.", tags.create(input));
     }
 
     @PutMapping("/{id}")
-    @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<Tag> update(@PathVariable long id, @Valid @RequestBody TagInput input) {
         return ok("Tag updated.", tags.update(id, input));
     }
 
     @DeleteMapping("/{id}")
-    @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<Void> archive(@PathVariable long id) {
         tags.archive(id);
-        return ok("Tag moved to Trash.", null);
+        return ok("Tag deleted.", null);
     }
 }

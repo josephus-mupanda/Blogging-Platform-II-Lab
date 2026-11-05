@@ -23,11 +23,7 @@ public class ApiErrors extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiEnvelope<Void>> businessError(ApiException exception) {
-        var response = ResponseEntity.status(exception.status());
-        if (exception.status() == HttpStatus.UNAUTHORIZED) {
-            response.header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Blogging Platform\"");
-        }
-        return response.body(ApiEnvelope.error(exception.getMessage(), null));
+        return ResponseEntity.status(exception.status()).body(ApiEnvelope.error(exception.getMessage(), null));
     }
 
     @ExceptionHandler(DuplicateKeyException.class)

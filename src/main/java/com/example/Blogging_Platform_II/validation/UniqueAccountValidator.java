@@ -1,12 +1,12 @@
 
 package com.example.Blogging_Platform_II.validation;
 
-import com.example.Blogging_Platform_II.api.Requests.Registration;
+import com.example.Blogging_Platform_II.api.Requests.UserCreate;
 import com.example.Blogging_Platform_II.repository.UserRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount, Registration> {
+public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount, UserCreate> {
     private final UserRepository users;
 
     public UniqueAccountValidator(UserRepository users) {
@@ -14,7 +14,7 @@ public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount
     }
 
     @Override
-    public boolean isValid(Registration input, ConstraintValidatorContext context) {
+    public boolean isValid(UserCreate input, ConstraintValidatorContext context) {
         if (input == null) {
             return true;
         }

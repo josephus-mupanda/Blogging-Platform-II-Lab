@@ -1,6 +1,5 @@
 
 # GraphiQL endpoint is /graphiql. Pick one named operation when running.
-# Use the Headers editor for authenticated operations.
 query SearchPosts {
   posts(filter: {keyword: "spring", sort: NEWEST, page: 0, size: 10}) {
     items { id title authorId tags { id name } }
@@ -15,37 +14,38 @@ query ReadDiscussion($postId: ID!) {
   reviews(postId: $postId) { averageRating reviews { rating text reviewerName } }
 }
 
-mutation SignUp {
-  register(input: {
+mutation CreateUser {
+  createUser(input: {
     username: "sample-author", email: "sample-author@example.test",
-    password: "local-demo-password", displayName: "Sample Author", role: AUTHOR
-  }) { id username role }
+    displayName: "Sample Author"
+  }) { id username }
 }
 
-mutation AddPost($tagIds: [ID!]) {
-  createPost(input: {title: "Spring Boot migration", body: "An article about Spring.", tagIds: $tagIds}) {
+mutation AddPost($authorId: ID!, $tagIds: [ID!]) {
+  createPost(authorId: $authorId,
+    input: {title: "Spring Boot migration", body: "An article about Spring.", tagIds: $tagIds}) {
     id title tags { id name }
   }
 }
 
-mutation AddComment($postId: ID!) {
-  addComment(postId: $postId, input: {body: "Thanks for the article."}) { id body }
+mutation AddComment($postId: ID!, $authorId: ID!) {
+  addComment(postId: $postId, authorId: $authorId, input: {body: "Thanks for the article."}) { id body }
 }
 
-mutation AddReview($postId: ID!) {
-  addReview(postId: $postId, input: {rating: 5, text: "Helpful."}) { id rating }
+mutation AddReview($postId: ID!, $reviewerId: ID!) {
+  addReview(postId: $postId, reviewerId: $reviewerId, input: {rating: 5, text: "Helpful."}) { id rating }
 }
 
 mutation CreateTag {
   createTag(input: {name: "spring"}) { id name }
 }
 
-query AdminOverview {
-  users { id username role active }
+query Overview {
+  users { id username displayName }
   tags { id name }
   dashboard { users posts tags comments reviews }
 }
 
-mutation ArchivePost($id: ID!) {
-  archivePost(id: $id)
+mutation DeletePost($id: ID!) {
+  deletePost(id: $id)
 }

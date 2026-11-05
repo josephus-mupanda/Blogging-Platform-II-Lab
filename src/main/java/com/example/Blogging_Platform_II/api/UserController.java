@@ -3,11 +3,10 @@ package com.example.Blogging_Platform_II.api;
 
 import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
 
-import com.example.Blogging_Platform_II.api.Requests.Registration;
-import com.example.Blogging_Platform_II.api.Requests.AccountUpdate;
+import com.example.Blogging_Platform_II.api.Requests.UserCreate;
+import com.example.Blogging_Platform_II.api.Requests.UserUpdate;
 import com.example.Blogging_Platform_II.model.Blog.User;
 import com.example.Blogging_Platform_II.service.UserService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -31,32 +30,29 @@ public class UserController {
     }
 
     @GetMapping
-    @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<List<User>> list() {
         return ok("Users found.", users.list());
     }
 
     @GetMapping("/{id}")
-    @SecurityRequirement(name = "basicAuth")
     ApiEnvelope<User> get(@PathVariable long id) {
         return ok("User found.", users.get(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<User> create(@Valid @RequestBody Registration input) {
-        return ok("User registered.", users.register(input));
+    ApiEnvelope<User> create(@Valid @RequestBody UserCreate input) {
+        return ok("User created.", users.create(input));
     }
 
     @PutMapping("/{id}")
-    @SecurityRequirement(name = "basicAuth")
-    ApiEnvelope<User> update(@PathVariable long id, @Valid @RequestBody AccountUpdate input) {
+    ApiEnvelope<User> update(@PathVariable long id, @Valid @RequestBody UserUpdate input) {
         return ok("User updated.", users.update(id, input));
     }
 
     @DeleteMapping("/{id}")
-    @SecurityRequirement(name = "basicAuth")
-    ApiEnvelope<User> deactivate(@PathVariable long id) {
-        return ok("User deactivated.", users.deactivate(id));
+    ApiEnvelope<Void> delete(@PathVariable long id) {
+        users.delete(id);
+        return ok("User deleted.", null);
     }
 }

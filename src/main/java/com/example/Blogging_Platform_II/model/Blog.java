@@ -10,11 +10,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public final class Blog {
     private Blog() {}
 
-    public enum Role { ADMIN, AUTHOR, READER }
     public enum Sort { NEWEST, OLDEST, TITLE_ASC, TITLE_DESC }
 
-    public record User(long id, String username, String displayName, Role role, boolean active) {}
-    public record Account(User user, String passwordHash) {}
+    public record User(long id, String username, String displayName) {}
     public record Tag(long id, String name) {}
     public record Post(long id, long authorId, String title, String body, String createdAt,
                        String updatedAt, List<Tag> tags) {}

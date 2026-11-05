@@ -6,10 +6,10 @@ import com.example.Blogging_Platform_II.api.Requests.PostInput;
 import com.example.Blogging_Platform_II.model.Blog.Post;
 import com.example.Blogging_Platform_II.model.Blog.PostFilter;
 import com.example.Blogging_Platform_II.model.Blog.PostPage;
-import com.example.Blogging_Platform_II.model.Blog.Role;
 import com.example.Blogging_Platform_II.model.Blog.Sort;
 import com.example.Blogging_Platform_II.repository.PostRepository;
 import com.example.Blogging_Platform_II.repository.TagRepository;
+import com.example.Blogging_Platform_II.repository.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -19,12 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
     private final PostRepository posts;
     private final TagRepository tags;
-    private final Actors actors;
+    private final UserRepository users;
 
-    public PostService(PostRepository posts, TagRepository tags, Actors actors) {
+    public PostService(PostRepository posts, TagRepository tags, UserRepository users) {
         this.posts = posts;
         this.tags = tags;
-        this.actors = actors;
+        this.users = users;
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -50,20 +50,17 @@ public class PostService {
     }
 
     @Transactional
-    public Post create(PostInput input) {
-        var actor = actors.current();
-        if (actor.role() == Role.READER) {
-            throw ApiException.forbidden("Only authors and administrators can create posts.");
-        }
+    public Post create(long authorId, PostInput input) {
+        users.findForContent(authorId).orElseThrow(() -> ApiException.notFound("Author"));
         List<Long> selected = visibleTags(input);
-        long id = posts.insert(actor.id(), input.title(), input.body());
+        long id = posts.insert(authorId, input.title(), input.body());
         posts.replaceTags(id, selected);
         return get(id);
     }
 
     @Transactional
     public Post update(long id, PostInput input) {
-        checkOwner(id);
+        lockVisible(id);
         List<Long> selected = visibleTags(input);
         posts.update(id, input.title(), input.body());
         posts.replaceTags(id, selected);
@@ -72,15 +69,14 @@ public class PostService {
 
     @Transactional
     public void archive(long id) {
-        checkOwner(id);
+        lockVisible(id);
         posts.archive(id);
     }
 
-    private void checkOwner(long id) {
+    private void lockVisible(long id) {
         if (!posts.lockVisible(id)) {
             throw ApiException.notFound("Post");
         }
-        actors.ownerOrAdmin(get(id).authorId());
     }
 
     private List<Long> visibleTags(PostInput input) {

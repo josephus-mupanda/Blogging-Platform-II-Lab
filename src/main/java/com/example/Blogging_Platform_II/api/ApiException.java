@@ -17,14 +17,6 @@ public class ApiException extends RuntimeException {
         return new ApiException(HttpStatus.BAD_REQUEST, message);
     }
 
-    public static ApiException unauthorized() {
-        return new ApiException(HttpStatus.UNAUTHORIZED, "Sign in with an active account to continue.");
-    }
-
-    public static ApiException forbidden(String message) {
-        return new ApiException(HttpStatus.FORBIDDEN, message);
-    }
-
     public static ApiException notFound(String resource) {
         return new ApiException(HttpStatus.NOT_FOUND, resource + " was not found.");
     }

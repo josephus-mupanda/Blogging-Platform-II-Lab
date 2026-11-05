@@ -1,8 +1,8 @@
 
 package com.example.Blogging_Platform_II.graphql;
 
-import com.example.Blogging_Platform_II.api.Requests.Registration;
-import com.example.Blogging_Platform_II.api.Requests.AccountUpdate;
+import com.example.Blogging_Platform_II.api.Requests.UserCreate;
+import com.example.Blogging_Platform_II.api.Requests.UserUpdate;
 import com.example.Blogging_Platform_II.api.Requests.PostInput;
 import com.example.Blogging_Platform_II.api.Requests.TagInput;
 import com.example.Blogging_Platform_II.api.Requests.CommentInput;
@@ -96,23 +96,24 @@ public class BlogGraphQlController {
     }
 
     @MutationMapping
-    public User register(@Argument @Valid Registration input) {
-        return users.register(input);
+    public User createUser(@Argument @Valid UserCreate input) {
+        return users.create(input);
     }
 
     @MutationMapping
-    public User updateUser(@Argument long id, @Argument @Valid AccountUpdate input) {
+    public User updateUser(@Argument long id, @Argument @Valid UserUpdate input) {
         return users.update(id, input);
     }
 
     @MutationMapping
-    public User deactivateUser(@Argument long id) {
-        return users.deactivate(id);
+    public boolean deleteUser(@Argument long id) {
+        users.delete(id);
+        return true;
     }
 
     @MutationMapping
-    public Post createPost(@Argument @Valid PostInput input) {
-        return posts.create(input);
+    public Post createPost(@Argument long authorId, @Argument @Valid PostInput input) {
+        return posts.create(authorId, input);
     }
 
     @MutationMapping
@@ -121,7 +122,7 @@ public class BlogGraphQlController {
     }
 
     @MutationMapping
-    public boolean archivePost(@Argument long id) {
+    public boolean deletePost(@Argument long id) {
         posts.archive(id);
         return true;
     }
@@ -137,14 +138,14 @@ public class BlogGraphQlController {
     }
 
     @MutationMapping
-    public boolean archiveTag(@Argument long id) {
+    public boolean deleteTag(@Argument long id) {
         tags.archive(id);
         return true;
     }
 
     @MutationMapping
-    public Comment addComment(@Argument long postId, @Argument @Valid CommentInput input) {
-        return discussion.addComment(postId, input);
+    public Comment addComment(@Argument long postId, @Argument long authorId, @Argument @Valid CommentInput input) {
+        return discussion.addComment(postId, authorId, input);
     }
 
     @MutationMapping
@@ -153,14 +154,14 @@ public class BlogGraphQlController {
     }
 
     @MutationMapping
-    public boolean archiveComment(@Argument long postId, @Argument String id) {
+    public boolean deleteComment(@Argument long postId, @Argument String id) {
         discussion.archiveComment(postId, id);
         return true;
     }
 
     @MutationMapping
-    public Review addReview(@Argument long postId, @Argument @Valid ReviewInput input) {
-        return discussion.addReview(postId, input);
+    public Review addReview(@Argument long postId, @Argument long reviewerId, @Argument @Valid ReviewInput input) {
+        return discussion.addReview(postId, reviewerId, input);
     }
 
 }

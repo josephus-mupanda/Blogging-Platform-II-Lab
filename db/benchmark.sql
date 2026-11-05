@@ -1,7 +1,7 @@
 
 -- Run against a dedicated benchmark database after the application has created the schema.
-INSERT INTO users (username, email, password_hash, display_name, role)
-VALUES ('bench-author', 'bench-author@example.test', 'disabled', 'Benchmark author', 'AUTHOR')
+INSERT INTO users (username, email, display_name)
+VALUES ('bench-author', 'bench-author@example.test', 'Benchmark author')
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO posts (author_id, title, body, created_at, updated_at)

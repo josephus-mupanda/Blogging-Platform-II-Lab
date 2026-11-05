@@ -13,33 +13,32 @@ type Query {
 }
 
 type Mutation {
-  register(input: Registration!): User
-  updateUser(id: ID!, input: AccountUpdate!): User
-  deactivateUser(id: ID!): User
-  createPost(input: PostInput!): Post
+  createUser(input: UserCreate!): User
+  updateUser(id: ID!, input: UserUpdate!): User
+  deleteUser(id: ID!): Boolean
+  createPost(authorId: ID!, input: PostInput!): Post
   updatePost(id: ID!, input: PostInput!): Post
-  archivePost(id: ID!): Boolean
+  deletePost(id: ID!): Boolean
   createTag(input: TagInput!): Tag
   updateTag(id: ID!, input: TagInput!): Tag
-  archiveTag(id: ID!): Boolean
-  addComment(postId: ID!, input: CommentInput!): Comment
+  deleteTag(id: ID!): Boolean
+  addComment(postId: ID!, authorId: ID!, input: CommentInput!): Comment
   updateComment(postId: ID!, id: ID!, input: CommentInput!): Comment
-  archiveComment(postId: ID!, id: ID!): Boolean
-  addReview(postId: ID!, input: ReviewInput!): Review
+  deleteComment(postId: ID!, id: ID!): Boolean
+  addReview(postId: ID!, reviewerId: ID!, input: ReviewInput!): Review
 }
 
-enum Role { ADMIN AUTHOR READER }
 enum Sort { NEWEST OLDEST TITLE_ASC TITLE_DESC }
 
-input Registration { username: String!, email: String!, password: String!, displayName: String!, role: Role! }
-input AccountUpdate { email: String!, displayName: String! }
+input UserCreate { username: String!, email: String!, displayName: String! }
+input UserUpdate { email: String!, displayName: String! }
 input PostInput { title: String!, body: String!, tagIds: [ID!] }
 input PostFilter { keyword: String, authorId: ID, tagId: ID, page: Int, size: Int, sort: Sort }
 input TagInput { name: String! }
 input CommentInput { body: String! }
 input ReviewInput { rating: Int!, text: String }
 
-type User { id: ID!, username: String!, displayName: String!, role: Role!, active: Boolean! }
+type User { id: ID!, username: String!, displayName: String! }
 type Post { id: ID!, authorId: ID!, title: String!, body: String!, createdAt: String!, updatedAt: String!, tags: [Tag!]! }
 type PostPage { items: [Post!]!, page: Int!, size: Int!, totalElements: Long!, totalPages: Long! }
 type Tag { id: ID!, name: String! }

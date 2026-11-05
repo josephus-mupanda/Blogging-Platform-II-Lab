@@ -1,7 +1,6 @@
 
 package com.example.Blogging_Platform_II.api;
 
-import com.example.Blogging_Platform_II.model.Blog.Role;
 import com.example.Blogging_Platform_II.validation.UniqueAccount;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -17,25 +16,21 @@ public final class Requests {
     private Requests() {}
 
     @UniqueAccount
-    public record Registration(
-            @NotBlank @Size(min = 3, max = 50)
-            @Pattern(regexp = "[^:\\p{Cntrl}]+", message = "must not contain a colon or control character")
-            String username,
+    public record UserCreate(
+            @NotBlank @Size(min = 3, max = 50) String username,
             @NotBlank @Email @Pattern(regexp = "[^\\s@]+@[^\\s@.]+(?:\\.[^\\s@.]+)+") @Size(max = 255) String email,
-            @NotBlank @Size(min = 6, max = 128) String password,
-            @NotBlank @Size(max = 100) String displayName,
-            @NotNull Role role) {
-        public Registration {
+            @NotBlank @Size(max = 100) String displayName) {
+        public UserCreate {
             username = trim(username);
             email = trim(email);
             displayName = trim(displayName);
         }
     }
 
-    public record AccountUpdate(
+    public record UserUpdate(
             @NotBlank @Email @Pattern(regexp = "[^\\s@]+@[^\\s@.]+(?:\\.[^\\s@.]+)+") @Size(max = 255) String email,
             @NotBlank @Size(max = 100) String displayName) {
-        public AccountUpdate {
+        public UserUpdate {
             email = trim(email);
             displayName = trim(displayName);
         }
