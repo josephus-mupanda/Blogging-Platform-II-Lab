@@ -13,6 +13,18 @@ A Java 21 and Spring Boot 3.5 backend that exposes the Blogging Platform I data 
 | 4. GraphQL | Run the post search and a comment mutation from [examples.graphql](docs/examples.graphql) in GraphiQL. |
 | 5. AOP and performance | Call post search and the dashboard with timing logs enabled. Use the [performance report](docs/performance-report.md) to explain the indexes and compare the two APIs. |
 
+## Code structure
+
+REST and GraphQL follow the same flow. For example, `PostController` and `PostGraphQlController` call `PostService`, which uses `PostRepository` to query PostgreSQL.
+
+| Package | Responsibility |
+|---|---|
+| `controller.rest` and `controller.graphql` | Bind requests, validate DTOs, and format responses and errors. |
+| `service` | Apply business rules, manage transactions, and call repositories. |
+| `repository` | Read and write PostgreSQL and MongoDB records. |
+
+The `dto` package contains input records and `model` contains the records returned by services. The uniqueness validator calls `UserService` for its checks. Services raise `BlogException` with a shared error code, which each controller's exception handler converts to its own response format.
+
 ## Run locally
 
 Install JDK 21, PostgreSQL with `pg_trgm`, and MongoDB. The project includes a Maven wrapper. From the repository root, create the development database and start the app.
@@ -82,7 +94,7 @@ $env:RUN_BLOG_INTEGRATION_TESTS = 'true'
 
 Use `TEST_POSTGRES_URL` and `TEST_MONGO_URI` to select dedicated test stores. The test creates unique fixtures and leaves them in those stores. The suite checks both HTTP APIs, compatibility with legacy records, filtering, validation, and deletion.
 
-Controllers delegate to constructor-injected services and repositories. Spring's `JdbcClient` runs parameterized queries and `MongoTemplate` works with the legacy documents. PostgreSQL performs filtering, ordering, and pagination before rows reach the API. Each result page loads tags in one query and groups them by post ID in memory.
+Repositories use Spring's `JdbcClient` for parameterized SQL and `MongoTemplate` for MongoDB documents. PostgreSQL performs filtering, ordering, and pagination before rows reach the API. Each result page loads tags in one query and groups them by post ID in memory.
 
 `ServiceMonitoring` uses `@Before` and `@After` for service entry and exit logs and `@Around` to log elapsed time for CRUD and analytics calls. Start the app with the command below, then call the post search or dashboard endpoint to see the timings.
 

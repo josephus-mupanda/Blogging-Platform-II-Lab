@@ -1,11 +1,10 @@
+package com.example.Blogging_Platform_II.controller.rest;
 
-package com.example.Blogging_Platform_II.api;
-
+import com.example.Blogging_Platform_II.exception.BlogException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,15 +20,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class ApiErrors extends ResponseEntityExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ApiErrors.class);
 
-    @ExceptionHandler(ApiException.class)
-    ResponseEntity<ApiEnvelope<Void>> businessError(ApiException exception) {
-        return ResponseEntity.status(exception.status()).body(ApiEnvelope.error(exception.getMessage(), null));
-    }
-
-    @ExceptionHandler(DuplicateKeyException.class)
-    ResponseEntity<ApiEnvelope<Void>> duplicate() {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiEnvelope.error("A record already uses this value.", null));
+    @ExceptionHandler(BlogException.class)
+    ResponseEntity<ApiEnvelope<Void>> businessError(BlogException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case CONFLICT -> HttpStatus.CONFLICT;
+        };
+        return ResponseEntity.status(status).body(ApiEnvelope.error(exception.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)

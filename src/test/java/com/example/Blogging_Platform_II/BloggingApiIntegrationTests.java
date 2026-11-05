@@ -54,6 +54,8 @@ class BloggingApiIntegrationTests {
                 .path("id").asLong();
         mvc.perform(request(put("/api/tags/" + tagId), Map.of("name", tag)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.name").value(tag));
+        graph("mutation { createTag(input: {name: \"" + tag + "\"}) { id } }")
+                .andExpect(jsonPath("$.errors[0].extensions.code").value("CONFLICT"));
 
         var postBody = Map.of("title", title, "body", "Read about JDBC and Spring.", "tagIds", new long[]{tagId});
         String authorParam = String.valueOf(authorId);
@@ -98,6 +100,7 @@ class BloggingApiIntegrationTests {
         mvc.perform(delete(path + "/comments/" + commentId)).andExpect(status().isOk());
         mongo.getCollection("comments").insertOne(new Document("postId", postId).append("authorId", authorId)
                 .append("authorName", "Legacy author").append("body", "Legacy comment")
+                .append("_class", "com.example.Blogging_Platform_II.model.Blog$Comment")
                 .append("createdAt", java.util.Date.from(java.time.Instant.now())));
         mvc.perform(get(path + "/comments")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].body").value("Legacy comment"));

@@ -1,7 +1,7 @@
 
 package com.example.Blogging_Platform_II.service;
 
-import com.example.Blogging_Platform_II.model.Blog.Dashboard;
+import com.example.Blogging_Platform_II.model.Dashboard;
 import com.example.Blogging_Platform_II.repository.DiscussionRepository;
 import com.example.Blogging_Platform_II.repository.PostRepository;
 import com.example.Blogging_Platform_II.repository.TagRepository;

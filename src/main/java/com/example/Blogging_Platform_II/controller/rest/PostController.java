@@ -1,12 +1,11 @@
+package com.example.Blogging_Platform_II.controller.rest;
 
-package com.example.Blogging_Platform_II.api;
+import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
 
-import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
-
-import com.example.Blogging_Platform_II.api.Requests.PostInput;
-import com.example.Blogging_Platform_II.model.Blog.Post;
-import com.example.Blogging_Platform_II.model.Blog.PostPage;
-import com.example.Blogging_Platform_II.model.Blog.PostFilter;
+import com.example.Blogging_Platform_II.dto.PostInput;
+import com.example.Blogging_Platform_II.model.Post;
+import com.example.Blogging_Platform_II.model.PostPage;
+import com.example.Blogging_Platform_II.model.PostFilter;
 import com.example.Blogging_Platform_II.service.PostService;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -45,12 +44,12 @@ public class PostController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Post> create(@RequestParam long authorId, @Valid @RequestBody PostInput input) {
-        return ok("Post created.", posts.create(authorId, input));
+        return ok("Post created.", posts.create(authorId, input.title(), input.body(), input.tagIds()));
     }
 
     @PutMapping("/{id}")
     ApiEnvelope<Post> update(@PathVariable long id, @Valid @RequestBody PostInput input) {
-        return ok("Post updated.", posts.update(id, input));
+        return ok("Post updated.", posts.update(id, input.title(), input.body(), input.tagIds()));
     }
 
     @DeleteMapping("/{id}")

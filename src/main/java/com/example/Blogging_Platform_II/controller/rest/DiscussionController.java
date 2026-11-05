@@ -1,13 +1,12 @@
+package com.example.Blogging_Platform_II.controller.rest;
 
-package com.example.Blogging_Platform_II.api;
+import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
 
-import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
-
-import com.example.Blogging_Platform_II.api.Requests.CommentInput;
-import com.example.Blogging_Platform_II.api.Requests.ReviewInput;
-import com.example.Blogging_Platform_II.model.Blog.Comment;
-import com.example.Blogging_Platform_II.model.Blog.Discussion;
-import com.example.Blogging_Platform_II.model.Blog.Review;
+import com.example.Blogging_Platform_II.dto.CommentInput;
+import com.example.Blogging_Platform_II.dto.ReviewInput;
+import com.example.Blogging_Platform_II.model.Comment;
+import com.example.Blogging_Platform_II.model.Discussion;
+import com.example.Blogging_Platform_II.model.Review;
 import com.example.Blogging_Platform_II.service.DiscussionService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -46,13 +45,13 @@ public class DiscussionController {
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Comment> createComment(@PathVariable long postId, @RequestParam long authorId,
                                        @Valid @RequestBody CommentInput input) {
-        return ok("Comment created.", discussion.addComment(postId, authorId, input));
+        return ok("Comment created.", discussion.addComment(postId, authorId, input.body()));
     }
 
     @PutMapping("/comments/{id}")
     ApiEnvelope<Comment> updateComment(@PathVariable long postId, @PathVariable String id,
                                        @Valid @RequestBody CommentInput input) {
-        return ok("Comment updated.", discussion.editComment(postId, id, input));
+        return ok("Comment updated.", discussion.editComment(postId, id, input.body()));
     }
 
     @DeleteMapping("/comments/{id}")
@@ -70,6 +69,6 @@ public class DiscussionController {
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Review> createReview(@PathVariable long postId, @RequestParam long reviewerId,
                                      @Valid @RequestBody ReviewInput input) {
-        return ok("Review created.", discussion.addReview(postId, reviewerId, input));
+        return ok("Review created.", discussion.addReview(postId, reviewerId, input.rating(), input.text()));
     }
 }

@@ -1,10 +1,10 @@
 
 package com.example.Blogging_Platform_II.repository;
 
-import com.example.Blogging_Platform_II.model.Blog.Post;
-import com.example.Blogging_Platform_II.model.Blog.PostPage;
-import com.example.Blogging_Platform_II.model.Blog.Sort;
-import com.example.Blogging_Platform_II.model.Blog.Tag;
+import com.example.Blogging_Platform_II.model.Post;
+import com.example.Blogging_Platform_II.model.PostPage;
+import com.example.Blogging_Platform_II.model.Sort;
+import com.example.Blogging_Platform_II.model.Tag;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;

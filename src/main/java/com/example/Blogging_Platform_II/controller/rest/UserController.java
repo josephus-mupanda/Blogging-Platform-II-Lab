@@ -1,11 +1,10 @@
+package com.example.Blogging_Platform_II.controller.rest;
 
-package com.example.Blogging_Platform_II.api;
+import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
 
-import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
-
-import com.example.Blogging_Platform_II.api.Requests.UserCreate;
-import com.example.Blogging_Platform_II.api.Requests.UserUpdate;
-import com.example.Blogging_Platform_II.model.Blog.User;
+import com.example.Blogging_Platform_II.dto.UserCreate;
+import com.example.Blogging_Platform_II.dto.UserUpdate;
+import com.example.Blogging_Platform_II.model.User;
 import com.example.Blogging_Platform_II.service.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -42,12 +41,12 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<User> create(@Valid @RequestBody UserCreate input) {
-        return ok("User created.", users.create(input));
+        return ok("User created.", users.create(input.username(), input.email(), input.displayName()));
     }
 
     @PutMapping("/{id}")
     ApiEnvelope<User> update(@PathVariable long id, @Valid @RequestBody UserUpdate input) {
-        return ok("User updated.", users.update(id, input));
+        return ok("User updated.", users.update(id, input.email(), input.displayName()));
     }
 
     @DeleteMapping("/{id}")

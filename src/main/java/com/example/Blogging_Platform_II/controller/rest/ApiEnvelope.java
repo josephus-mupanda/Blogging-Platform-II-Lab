@@ -1,5 +1,4 @@
-
-package com.example.Blogging_Platform_II.api;
+package com.example.Blogging_Platform_II.controller.rest;
 
 public record ApiEnvelope<T>(String status, String message, T data) {
     public static <T> ApiEnvelope<T> ok(String message, T data) {

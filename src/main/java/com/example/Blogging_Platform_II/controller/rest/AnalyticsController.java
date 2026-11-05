@@ -1,9 +1,8 @@
+package com.example.Blogging_Platform_II.controller.rest;
 
-package com.example.Blogging_Platform_II.api;
+import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
 
-import static com.example.Blogging_Platform_II.api.ApiEnvelope.ok;
-
-import com.example.Blogging_Platform_II.model.Blog.Dashboard;
+import com.example.Blogging_Platform_II.model.Dashboard;
 import com.example.Blogging_Platform_II.service.AnalyticsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

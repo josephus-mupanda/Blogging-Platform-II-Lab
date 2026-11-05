@@ -1,15 +1,15 @@
 
 package com.example.Blogging_Platform_II.validation;
 
-import com.example.Blogging_Platform_II.api.Requests.UserCreate;
-import com.example.Blogging_Platform_II.repository.UserRepository;
+import com.example.Blogging_Platform_II.dto.UserCreate;
+import com.example.Blogging_Platform_II.service.UserService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount, UserCreate> {
-    private final UserRepository users;
+    private final UserService users;
 
-    public UniqueAccountValidator(UserRepository users) {
+    public UniqueAccountValidator(UserService users) {
         this.users = users;
     }
 
@@ -20,7 +20,7 @@ public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount
         }
         boolean usernameTaken = input.username() != null && !input.username().isBlank()
                 && users.usernameExists(input.username());
-        boolean emailTaken = input.email() != null && !input.email().isBlank() && users.emailExists(input.email(), 0);
+        boolean emailTaken = input.email() != null && !input.email().isBlank() && users.emailExists(input.email());
         if (usernameTaken || emailTaken) {
             context.disableDefaultConstraintViolation();
             if (usernameTaken) {

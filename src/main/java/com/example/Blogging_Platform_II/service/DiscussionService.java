@@ -1,12 +1,10 @@
 
 package com.example.Blogging_Platform_II.service;
 
-import com.example.Blogging_Platform_II.api.ApiException;
-import com.example.Blogging_Platform_II.api.Requests.CommentInput;
-import com.example.Blogging_Platform_II.api.Requests.ReviewInput;
-import com.example.Blogging_Platform_II.model.Blog.Comment;
-import com.example.Blogging_Platform_II.model.Blog.Discussion;
-import com.example.Blogging_Platform_II.model.Blog.Review;
+import com.example.Blogging_Platform_II.exception.BlogException;
+import com.example.Blogging_Platform_II.model.Comment;
+import com.example.Blogging_Platform_II.model.Discussion;
+import com.example.Blogging_Platform_II.model.Review;
 import com.example.Blogging_Platform_II.repository.DiscussionRepository;
 import com.example.Blogging_Platform_II.repository.PostRepository;
 import com.example.Blogging_Platform_II.repository.UserRepository;
@@ -39,24 +37,24 @@ public class DiscussionService {
     }
 
     @Transactional
-    public Comment addComment(long postId, long authorId, CommentInput input) {
-        var author = users.findForContent(authorId).orElseThrow(() -> ApiException.notFound("Author"));
+    public Comment addComment(long postId, long authorId, String body) {
+        var author = users.findForContent(authorId).orElseThrow(() -> BlogException.notFound("Author"));
         lockVisible(postId);
         return discussion.insert(new Comment(null, postId, author.id(), author.displayName(),
-                input.body(), Instant.now(), null));
+                body, Instant.now(), null));
     }
 
     @Transactional
-    public Comment editComment(long postId, String id, CommentInput input) {
+    public Comment editComment(long postId, String id, String body) {
         lockVisible(postId);
-        return discussion.edit(postId, id, input.body()).orElseThrow(() -> ApiException.notFound("Comment"));
+        return discussion.edit(postId, id, body).orElseThrow(() -> BlogException.notFound("Comment"));
     }
 
     @Transactional
     public void archiveComment(long postId, String id) {
         lockVisible(postId);
         if (!discussion.archive(postId, id)) {
-            throw ApiException.notFound("Comment");
+            throw BlogException.notFound("Comment");
         }
     }
 
@@ -67,30 +65,30 @@ public class DiscussionService {
     }
 
     @Transactional
-    public Review addReview(long postId, long reviewerId, ReviewInput input) {
-        var reviewer = users.findForContent(reviewerId).orElseThrow(() -> ApiException.notFound("Reviewer"));
+    public Review addReview(long postId, long reviewerId, int rating, String text) {
+        var reviewer = users.findForContent(reviewerId).orElseThrow(() -> BlogException.notFound("Reviewer"));
         lockVisible(postId);
         try {
             return discussion.insert(new Review(null, postId, reviewer.id(), reviewer.displayName(),
-                    input.rating(), input.text(), Instant.now()));
+                    rating, text, Instant.now()));
         } catch (DuplicateKeyException exception) {
-            throw ApiException.conflict("This user has already reviewed the post.");
+            throw BlogException.conflict("This user has already reviewed the post.");
         }
     }
 
     private Comment findComment(long postId, String id) {
-        return discussion.comment(postId, id).orElseThrow(() -> ApiException.notFound("Comment"));
+        return discussion.comment(postId, id).orElseThrow(() -> BlogException.notFound("Comment"));
     }
 
     private void requireVisible(long postId) {
         if (!posts.existsVisible(postId)) {
-            throw ApiException.notFound("Post");
+            throw BlogException.notFound("Post");
         }
     }
 
     private void lockVisible(long postId) {
         if (!posts.lockVisible(postId)) {
-            throw ApiException.notFound("Post");
+            throw BlogException.notFound("Post");
         }
     }
 }

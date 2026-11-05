@@ -1,0 +1,11 @@
+package com.example.Blogging_Platform_II.dto;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+public record ReviewInput(@NotNull @Min(1) @Max(5) Integer rating, String text) {
+    public ReviewInput {
+        text = text == null ? "" : text.strip();
+    }
+}

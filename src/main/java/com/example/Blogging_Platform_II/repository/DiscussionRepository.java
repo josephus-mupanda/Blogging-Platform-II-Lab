@@ -4,8 +4,8 @@ package com.example.Blogging_Platform_II.repository;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.example.Blogging_Platform_II.model.Blog.Comment;
-import com.example.Blogging_Platform_II.model.Blog.Review;
+import com.example.Blogging_Platform_II.model.Comment;
+import com.example.Blogging_Platform_II.model.Review;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

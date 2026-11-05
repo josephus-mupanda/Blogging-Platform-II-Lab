@@ -1,14 +1,12 @@
+package com.example.Blogging_Platform_II.controller.graphql;
 
-package com.example.Blogging_Platform_II.graphql;
-
-import com.example.Blogging_Platform_II.api.ApiException;
+import com.example.Blogging_Platform_II.exception.BlogException;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.graphql.data.method.annotation.GraphQlExceptionHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
@@ -17,8 +15,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 @ControllerAdvice(annotations = Controller.class)
 public class GraphQlErrors {
     @GraphQlExceptionHandler
-    GraphQLError business(ApiException exception, DataFetchingEnvironment environment) {
-        return error(environment, exception.status().name(), exception.getMessage());
+    GraphQLError business(BlogException exception, DataFetchingEnvironment environment) {
+        return error(environment, exception.code().name(), exception.getMessage());
     }
 
     @GraphQlExceptionHandler
@@ -32,11 +30,6 @@ public class GraphQlErrors {
     @GraphQlExceptionHandler
     GraphQLError invalidArguments(BindException exception, DataFetchingEnvironment environment) {
         return error(environment, "BAD_REQUEST", "Check the argument types and values.");
-    }
-
-    @GraphQlExceptionHandler
-    GraphQLError duplicate(DuplicateKeyException exception, DataFetchingEnvironment environment) {
-        return error(environment, "CONFLICT", "A record already uses this value.");
     }
 
     private GraphQLError error(DataFetchingEnvironment environment, String code, String message) {

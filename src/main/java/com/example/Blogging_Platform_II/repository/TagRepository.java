@@ -1,7 +1,7 @@
 
 package com.example.Blogging_Platform_II.repository;
 
-import com.example.Blogging_Platform_II.model.Blog.Tag;
+import com.example.Blogging_Platform_II.model.Tag;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.RowMapper;
