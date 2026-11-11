@@ -23,18 +23,21 @@ REST and GraphQL follow the same flow. For example, `PostController` and `PostGr
 | `service` | Apply business rules, manage transactions, and call repositories. |
 | `repository` | Read and write PostgreSQL and MongoDB records. |
 
-The `dto` package contains input records and `model` contains the records returned by services. The uniqueness validator calls `UserService` for its checks. Services raise `BlogException` with a shared error code, which each controller's exception handler converts to its own response format.
+The `dto` package contains the input classes that requests are bound to, and `model` contains the classes that services return. Both are plain Java classes with a constructor, getters, and setters. The uniqueness validator calls `UserService` for its checks. Services raise `BlogException` with a shared error code, which each controller's exception handler converts to its own response format.
 
 ## Run locally
 
-Install JDK 21, PostgreSQL with `pg_trgm`, and MongoDB. The project includes a Maven wrapper. From the repository root, create the development database and start the app.
+Install JDK 21, PostgreSQL with `pg_trgm`, and MongoDB. The project includes a Maven wrapper. From the repository root, create the development database, run the setup script once, and start the app.
 
 ```powershell
 createdb -h localhost -p 5433 -U postgres blogging_platform_ii
+psql -h localhost -p 5433 -U postgres -d blogging_platform_ii -f db/schema.sql
 .\mvnw.cmd spring-boot:run
 ```
 
-Use `./mvnw` on macOS or Linux. To try the migration with Platform I data, point the app at local copies of both databases. Flyway adopts the PostgreSQL schema and preserves the existing rows. If an older database has duplicate titles that differ only by case or surrounding spaces, resolve the duplicates so Flyway can create the unique index.
+`createdb` and `psql` live in the PostgreSQL `bin` folder, for example `C:\Program Files\PostgreSQL\18\bin`. Call them with the full path or add that folder to `PATH`. Use `./mvnw` on macOS or Linux.
+
+[db/schema.sql](db/schema.sql) creates the tables and indexes designed in Platform I. It only creates what is missing, so it is safe to run again, and it can also be run against an existing Platform I database to add the columns this phase uses. If an older database has duplicate titles that differ only by case or surrounding spaces, resolve those duplicates first so the unique title index can be created. MongoDB needs no setup script because it creates its collections and indexes on first use.
 
 ## Environment profiles
 
@@ -82,17 +85,7 @@ query {
 
 REST and GraphQL call the same services. GraphQL returns standard `data` and `errors`, with an application error code under `extensions.code` for handled service and validation failures.
 
-## Tests and performance
-
-Create the isolated `blogging_platform_ii_test` PostgreSQL database, make MongoDB available, and run the integration suite.
-
-```powershell
-createdb -h localhost -p 5433 -U postgres blogging_platform_ii_test
-$env:RUN_BLOG_INTEGRATION_TESTS = 'true'
-.\mvnw.cmd verify
-```
-
-Use `TEST_POSTGRES_URL` and `TEST_MONGO_URI` to select dedicated test stores. The test creates unique fixtures and leaves them in those stores. The suite checks both HTTP APIs, compatibility with legacy records, filtering, validation, and deletion.
+## Performance
 
 Repositories use Spring's `JdbcClient` for parameterized SQL and `MongoTemplate` for MongoDB documents. PostgreSQL performs filtering, ordering, and pagination before rows reach the API. Each result page loads tags in one query and groups them by post ID in memory.
 

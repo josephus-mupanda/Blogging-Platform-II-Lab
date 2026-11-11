@@ -70,11 +70,6 @@ public class PostRepository {
                 .param("id", id).query(Boolean.class).single();
     }
 
-    public boolean lockVisible(long id) {
-        return jdbc.sql("SELECT post_id FROM posts WHERE post_id = :id AND deleted_at IS NULL FOR UPDATE")
-                .param("id", id).query(Long.class).optional().isPresent();
-    }
-
     public long insert(long authorId, String title, String body) {
         return jdbc.sql("INSERT INTO posts (author_id, title, body) VALUES (:author, :title, :body) RETURNING post_id")
                 .param("author", authorId).param("title", title).param("body", body).query(Long.class).single();
@@ -109,15 +104,22 @@ public class PostRepository {
         if (posts.isEmpty()) {
             return posts;
         }
+        List<Long> ids = new ArrayList<>();
+        for (Post post : posts) {
+            ids.add(post.getId());
+        }
+        // One query loads the tags of the whole page, then a hash map groups them by post ID.
         Map<Long, List<Tag>> tagsByPost = new HashMap<>();
         jdbc.sql("""
                 SELECT pt.post_id, t.tag_id, t.name FROM post_tags pt JOIN tags t USING (tag_id)
                 WHERE pt.post_id IN (:ids) AND t.deleted_at IS NULL ORDER BY t.name, t.tag_id
-                """).param("ids", posts.stream().map(Post::id).toList()).query(row -> {
-                    tagsByPost.computeIfAbsent(row.getLong("post_id"), ignored -> new ArrayList<>())
+                """).param("ids", ids).query(row -> {
+                    tagsByPost.computeIfAbsent(row.getLong("post_id"), key -> new ArrayList<>())
                             .add(new Tag(row.getLong("tag_id"), row.getString("name")));
                 });
-        return posts.stream().map(post -> new Post(post.id(), post.authorId(), post.title(), post.body(),
-                post.createdAt(), post.updatedAt(), List.copyOf(tagsByPost.getOrDefault(post.id(), List.of())))).toList();
+        for (Post post : posts) {
+            post.setTags(tagsByPost.getOrDefault(post.getId(), List.of()));
+        }
+        return posts;
     }
 }

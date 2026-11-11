@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 public class GraphQlErrors {
     @GraphQlExceptionHandler
     GraphQLError business(BlogException exception, DataFetchingEnvironment environment) {
-        return error(environment, exception.code().name(), exception.getMessage());
+        return error(environment, exception.getCode().name(), exception.getMessage());
     }
 
     @GraphQlExceptionHandler

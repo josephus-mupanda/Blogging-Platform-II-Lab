@@ -1,5 +1,6 @@
 package com.example.Blogging_Platform_II.exception;
 
+/** One exception for the business rules, with a code the controllers turn into a status. */
 public class BlogException extends RuntimeException {
     public enum Code { BAD_REQUEST, NOT_FOUND, CONFLICT }
 
@@ -10,7 +11,7 @@ public class BlogException extends RuntimeException {
         this.code = code;
     }
 
-    public Code code() {
+    public Code getCode() {
         return code;
     }
 

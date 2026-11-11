@@ -24,10 +24,6 @@ public class UserRepository {
         return jdbc.sql(BY_ID).param("id", id).query(USER).optional();
     }
 
-    public Optional<User> findForContent(long id) {
-        return jdbc.sql(BY_ID + " FOR SHARE").param("id", id).query(USER).optional();
-    }
-
     public List<User> list() {
         return jdbc.sql("SELECT " + COLUMNS + " FROM users WHERE active ORDER BY username, user_id").query(USER).list();
     }

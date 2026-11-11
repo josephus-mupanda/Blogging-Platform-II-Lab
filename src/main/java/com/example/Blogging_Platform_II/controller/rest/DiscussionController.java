@@ -45,13 +45,13 @@ public class DiscussionController {
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Comment> createComment(@PathVariable long postId, @RequestParam long authorId,
                                        @Valid @RequestBody CommentInput input) {
-        return ok("Comment created.", discussion.addComment(postId, authorId, input.body()));
+        return ok("Comment created.", discussion.addComment(postId, authorId, input.getBody()));
     }
 
     @PutMapping("/comments/{id}")
     ApiEnvelope<Comment> updateComment(@PathVariable long postId, @PathVariable String id,
                                        @Valid @RequestBody CommentInput input) {
-        return ok("Comment updated.", discussion.editComment(postId, id, input.body()));
+        return ok("Comment updated.", discussion.editComment(postId, id, input.getBody()));
     }
 
     @DeleteMapping("/comments/{id}")
@@ -69,6 +69,6 @@ public class DiscussionController {
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Review> createReview(@PathVariable long postId, @RequestParam long reviewerId,
                                      @Valid @RequestBody ReviewInput input) {
-        return ok("Review created.", discussion.addReview(postId, reviewerId, input.rating(), input.text()));
+        return ok("Review created.", discussion.addReview(postId, reviewerId, input.getRating(), input.getText()));
     }
 }

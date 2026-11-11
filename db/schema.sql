@@ -1,12 +1,15 @@
+-- Blogging Platform II - PostgreSQL setup script.
+-- Run this once against the database before starting the application:
+--   psql -h localhost -p 5433 -U postgres -d blogging_platform_ii -f db/schema.sql
+-- Comments and reviews are stored in MongoDB, which creates its collections on first use.
 
--- Adopt the Platform I schema in place or create it for a fresh database.
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
     display_name VARCHAR(100) NOT NULL,
-    role VARCHAR(10) NOT NULL CHECK (role IN ('ADMIN', 'AUTHOR', 'READER')),
+    role VARCHAR(10) NOT NULL DEFAULT 'READER' CHECK (role IN ('ADMIN', 'AUTHOR', 'READER')),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
@@ -33,12 +36,10 @@ CREATE TABLE IF NOT EXISTS post_tags (
     PRIMARY KEY (post_id, tag_id)
 );
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
-ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);
-ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
-ALTER TABLE tags ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
-
+-- Indexes that keep searching, filtering, and sorting fast.
+-- pg_trgm lets PostgreSQL use an index for case-insensitive "contains" searches.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE UNIQUE INDEX IF NOT EXISTS uq_posts_normalized_title ON posts (lower(btrim(title)));
 CREATE INDEX IF NOT EXISTS idx_posts_title_trgm ON posts USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_posts_body_trgm ON posts USING GIN (body gin_trgm_ops);
@@ -47,3 +48,10 @@ CREATE INDEX IF NOT EXISTS idx_post_tags_tag_id ON post_tags (tag_id);
 CREATE INDEX IF NOT EXISTS idx_posts_visible_created
     ON posts (created_at DESC, post_id DESC) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_posts_archived ON posts (deleted_at DESC) WHERE deleted_at IS NOT NULL;
+
+-- Only needed when reusing an existing Platform I database. On a new database these do nothing.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN role SET DEFAULT 'READER';
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE tags ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;

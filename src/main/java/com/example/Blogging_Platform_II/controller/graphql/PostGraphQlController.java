@@ -31,12 +31,12 @@ public class PostGraphQlController {
 
     @MutationMapping
     public Post createPost(@Argument long authorId, @Argument @Valid PostInput input) {
-        return posts.create(authorId, input.title(), input.body(), input.tagIds());
+        return posts.create(authorId, input.getTitle(), input.getBody(), input.getTagIds());
     }
 
     @MutationMapping
     public Post updatePost(@Argument long id, @Argument @Valid PostInput input) {
-        return posts.update(id, input.title(), input.body(), input.tagIds());
+        return posts.update(id, input.getTitle(), input.getBody(), input.getTagIds());
     }
 
     @MutationMapping

@@ -5,6 +5,7 @@ import com.example.Blogging_Platform_II.exception.BlogException;
 import com.example.Blogging_Platform_II.model.Comment;
 import com.example.Blogging_Platform_II.model.Discussion;
 import com.example.Blogging_Platform_II.model.Review;
+import com.example.Blogging_Platform_II.model.User;
 import com.example.Blogging_Platform_II.repository.DiscussionRepository;
 import com.example.Blogging_Platform_II.repository.PostRepository;
 import com.example.Blogging_Platform_II.repository.UserRepository;
@@ -38,21 +39,21 @@ public class DiscussionService {
 
     @Transactional
     public Comment addComment(long postId, long authorId, String body) {
-        var author = users.findForContent(authorId).orElseThrow(() -> BlogException.notFound("Author"));
-        lockVisible(postId);
-        return discussion.insert(new Comment(null, postId, author.id(), author.displayName(),
+        User author = users.find(authorId).orElseThrow(() -> BlogException.notFound("Author"));
+        requireVisible(postId);
+        return discussion.insert(new Comment(null, postId, author.getId(), author.getDisplayName(),
                 body, Instant.now(), null));
     }
 
     @Transactional
     public Comment editComment(long postId, String id, String body) {
-        lockVisible(postId);
+        requireVisible(postId);
         return discussion.edit(postId, id, body).orElseThrow(() -> BlogException.notFound("Comment"));
     }
 
     @Transactional
     public void archiveComment(long postId, String id) {
-        lockVisible(postId);
+        requireVisible(postId);
         if (!discussion.archive(postId, id)) {
             throw BlogException.notFound("Comment");
         }
@@ -61,15 +62,15 @@ public class DiscussionService {
     public Discussion reviews(long postId) {
         requireVisible(postId);
         List<Review> reviews = discussion.reviews(postId);
-        return new Discussion(reviews, reviews.stream().mapToInt(Review::rating).average().orElse(0));
+        return new Discussion(reviews, reviews.stream().mapToInt(Review::getRating).average().orElse(0));
     }
 
     @Transactional
     public Review addReview(long postId, long reviewerId, int rating, String text) {
-        var reviewer = users.findForContent(reviewerId).orElseThrow(() -> BlogException.notFound("Reviewer"));
-        lockVisible(postId);
+        User reviewer = users.find(reviewerId).orElseThrow(() -> BlogException.notFound("Reviewer"));
+        requireVisible(postId);
         try {
-            return discussion.insert(new Review(null, postId, reviewer.id(), reviewer.displayName(),
+            return discussion.insert(new Review(null, postId, reviewer.getId(), reviewer.getDisplayName(),
                     rating, text, Instant.now()));
         } catch (DuplicateKeyException exception) {
             throw BlogException.conflict("This user has already reviewed the post.");
@@ -82,12 +83,6 @@ public class DiscussionService {
 
     private void requireVisible(long postId) {
         if (!posts.existsVisible(postId)) {
-            throw BlogException.notFound("Post");
-        }
-    }
-
-    private void lockVisible(long postId) {
-        if (!posts.lockVisible(postId)) {
             throw BlogException.notFound("Post");
         }
     }

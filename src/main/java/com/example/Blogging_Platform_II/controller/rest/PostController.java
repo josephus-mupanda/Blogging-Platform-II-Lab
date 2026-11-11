@@ -44,12 +44,12 @@ public class PostController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Post> create(@RequestParam long authorId, @Valid @RequestBody PostInput input) {
-        return ok("Post created.", posts.create(authorId, input.title(), input.body(), input.tagIds()));
+        return ok("Post created.", posts.create(authorId, input.getTitle(), input.getBody(), input.getTagIds()));
     }
 
     @PutMapping("/{id}")
     ApiEnvelope<Post> update(@PathVariable long id, @Valid @RequestBody PostInput input) {
-        return ok("Post updated.", posts.update(id, input.title(), input.body(), input.tagIds()));
+        return ok("Post updated.", posts.update(id, input.getTitle(), input.getBody(), input.getTagIds()));
     }
 
     @DeleteMapping("/{id}")

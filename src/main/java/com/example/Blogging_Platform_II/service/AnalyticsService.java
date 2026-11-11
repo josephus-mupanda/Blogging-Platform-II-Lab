@@ -2,6 +2,7 @@
 package com.example.Blogging_Platform_II.service;
 
 import com.example.Blogging_Platform_II.model.Dashboard;
+import java.util.List;
 import com.example.Blogging_Platform_II.repository.DiscussionRepository;
 import com.example.Blogging_Platform_II.repository.PostRepository;
 import com.example.Blogging_Platform_II.repository.TagRepository;
@@ -24,7 +25,7 @@ public class AnalyticsService {
     }
 
     public Dashboard dashboard() {
-        var archived = posts.archivedIds();
+        List<Long> archived = posts.archivedIds();
         return new Dashboard(users.count(), posts.countVisible(), tags.countVisible(),
                 discussion.countComments(archived), discussion.countReviews(archived));
     }

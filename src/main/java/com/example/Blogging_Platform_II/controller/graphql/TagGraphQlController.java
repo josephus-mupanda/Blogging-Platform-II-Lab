@@ -30,12 +30,12 @@ public class TagGraphQlController {
 
     @MutationMapping
     public Tag createTag(@Argument @Valid TagInput input) {
-        return tags.create(input.name());
+        return tags.create(input.getName());
     }
 
     @MutationMapping
     public Tag updateTag(@Argument long id, @Argument @Valid TagInput input) {
-        return tags.update(id, input.name());
+        return tags.update(id, input.getName());
     }
 
     @MutationMapping

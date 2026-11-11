@@ -41,12 +41,12 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<User> create(@Valid @RequestBody UserCreate input) {
-        return ok("User created.", users.create(input.username(), input.email(), input.displayName()));
+        return ok("User created.", users.create(input.getUsername(), input.getEmail(), input.getDisplayName()));
     }
 
     @PutMapping("/{id}")
     ApiEnvelope<User> update(@PathVariable long id, @Valid @RequestBody UserUpdate input) {
-        return ok("User updated.", users.update(id, input.email(), input.displayName()));
+        return ok("User updated.", users.update(id, input.getEmail(), input.getDisplayName()));
     }
 
     @DeleteMapping("/{id}")

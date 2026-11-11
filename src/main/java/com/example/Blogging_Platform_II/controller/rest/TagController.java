@@ -40,12 +40,12 @@ public class TagController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiEnvelope<Tag> create(@Valid @RequestBody TagInput input) {
-        return ok("Tag created.", tags.create(input.name()));
+        return ok("Tag created.", tags.create(input.getName()));
     }
 
     @PutMapping("/{id}")
     ApiEnvelope<Tag> update(@PathVariable long id, @Valid @RequestBody TagInput input) {
-        return ok("Tag updated.", tags.update(id, input.name()));
+        return ok("Tag updated.", tags.update(id, input.getName()));
     }
 
     @DeleteMapping("/{id}")

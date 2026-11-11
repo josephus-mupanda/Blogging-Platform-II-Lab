@@ -46,7 +46,7 @@ public class TagRepository {
         if (ids.isEmpty()) {
             return true;
         }
-        return jdbc.sql("SELECT tag_id FROM tags WHERE tag_id IN (:ids) AND deleted_at IS NULL ORDER BY tag_id FOR SHARE")
+        return jdbc.sql("SELECT tag_id FROM tags WHERE tag_id IN (:ids) AND deleted_at IS NULL")
                 .param("ids", ids).query(Long.class).list().size() == ids.size();
     }
 

@@ -31,12 +31,12 @@ public class UserGraphQlController {
 
     @MutationMapping
     public User createUser(@Argument @Valid UserCreate input) {
-        return users.create(input.username(), input.email(), input.displayName());
+        return users.create(input.getUsername(), input.getEmail(), input.getDisplayName());
     }
 
     @MutationMapping
     public User updateUser(@Argument long id, @Argument @Valid UserUpdate input) {
-        return users.update(id, input.email(), input.displayName());
+        return users.update(id, input.getEmail(), input.getDisplayName());
     }
 
     @MutationMapping

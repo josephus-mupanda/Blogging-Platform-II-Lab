@@ -18,9 +18,9 @@ public class UniqueAccountValidator implements ConstraintValidator<UniqueAccount
         if (input == null) {
             return true;
         }
-        boolean usernameTaken = input.username() != null && !input.username().isBlank()
-                && users.usernameExists(input.username());
-        boolean emailTaken = input.email() != null && !input.email().isBlank() && users.emailExists(input.email());
+        boolean usernameTaken = input.getUsername() != null && !input.getUsername().isBlank()
+                && users.usernameExists(input.getUsername());
+        boolean emailTaken = input.getEmail() != null && !input.getEmail().isBlank() && users.emailExists(input.getEmail());
         if (usernameTaken || emailTaken) {
             context.disableDefaultConstraintViolation();
             if (usernameTaken) {

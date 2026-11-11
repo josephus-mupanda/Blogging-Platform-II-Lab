@@ -38,12 +38,12 @@ public class DiscussionGraphQlController {
 
     @MutationMapping
     public Comment addComment(@Argument long postId, @Argument long authorId, @Argument @Valid CommentInput input) {
-        return discussion.addComment(postId, authorId, input.body());
+        return discussion.addComment(postId, authorId, input.getBody());
     }
 
     @MutationMapping
     public Comment updateComment(@Argument long postId, @Argument String id, @Argument @Valid CommentInput input) {
-        return discussion.editComment(postId, id, input.body());
+        return discussion.editComment(postId, id, input.getBody());
     }
 
     @MutationMapping
@@ -54,6 +54,6 @@ public class DiscussionGraphQlController {
 
     @MutationMapping
     public Review addReview(@Argument long postId, @Argument long reviewerId, @Argument @Valid ReviewInput input) {
-        return discussion.addReview(postId, reviewerId, input.rating(), input.text());
+        return discussion.addReview(postId, reviewerId, input.getRating(), input.getText());
     }
 }
