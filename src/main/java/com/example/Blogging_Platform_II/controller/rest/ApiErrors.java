@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** One place that turns every REST error into the status, message and data envelope. */
 @RestControllerAdvice
@@ -54,6 +55,17 @@ public class ApiErrors {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> unreadableBody(HttpMessageNotReadableException exception) {
         return ResponseEntity.badRequest().body(ApiResponse.error("The request body could not be read.", null));
+    }
+
+    /**
+     * An address that matches no endpoint, such as the /favicon.ico a browser asks for on its own.
+     * This is a normal 404, not a server fault, so it is logged quietly and without a stack trace.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> unknownAddress(NoResourceFoundException exception) {
+        LOG.debug("No endpoint for {}", exception.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("This address does not exist on the server.", null));
     }
 
     @ExceptionHandler(Exception.class)
