@@ -1,51 +1,218 @@
+# =====================================================================
+#  Blogging Platform II - ready to run GraphQL examples
+# =====================================================================
+#
+#  HOW TO USE
+#    1. Start the app:  .\mvnw.cmd spring-boot:run
+#    2. Open            http://localhost:8080/graphiql
+#    3. Copy ONE numbered block below, paste it into the editor,
+#       and press the pink play button (or Ctrl+Enter).
+#
+#  PASTE ONE BLOCK AT A TIME. If several operations are in the editor
+#  at once, GraphiQL has to ask which one you mean. Use the "+" tab
+#  button to keep several blocks open side by side instead.
+#
+#  No Variables panel needed. Every value is written inline, so there
+#  is nothing to fill in at the bottom of the screen.
+#
+#  The IDs below assume user 1, tag 1 and post 1 exist. Block 1 shows
+#  you the real IDs in your database; if yours differ, change the
+#  numbers in the later blocks.
+# =====================================================================
 
-# GraphiQL endpoint is /graphiql. Pick one named operation when running.
-query SearchPosts {
-  posts(filter: {keyword: "spring", sort: NEWEST, page: 0, size: 10}) {
-    items { id title authorId tags { id name } }
-    totalElements
-    totalPages
-  }
-}
 
-query ReadDiscussion($postId: ID!) {
-  post(id: $postId) { id title body }
-  comments(postId: $postId) { id body authorName }
-  reviews(postId: $postId) { averageRating reviews { rating text reviewerName } }
-}
-
-mutation CreateUser {
-  createUser(input: {
-    username: "sample-author", email: "sample-author@example.test",
-    displayName: "Sample Author"
-  }) { id username }
-}
-
-mutation AddPost($authorId: ID!, $tagIds: [ID!]) {
-  createPost(authorId: $authorId,
-    input: {title: "Spring Boot migration", body: "An article about Spring.", tagIds: $tagIds}) {
-    id title tags { id name }
-  }
-}
-
-mutation AddComment($postId: ID!, $authorId: ID!) {
-  addComment(postId: $postId, authorId: $authorId, input: {body: "Thanks for the article."}) { id body }
-}
-
-mutation AddReview($postId: ID!, $reviewerId: ID!) {
-  addReview(postId: $postId, reviewerId: $reviewerId, input: {rating: 5, text: "Helpful."}) { id rating }
-}
-
-mutation CreateTag {
-  createTag(input: {name: "spring"}) { id name }
-}
-
-query Overview {
+# ---------------------------------------------------------------------
+# 1. WHAT IS IN MY DATABASE?
+#    Needs no IDs, so it always works. Run this first and note the IDs.
+#    Three REST calls answered in a single request.
+# ---------------------------------------------------------------------
+{
   users { id username displayName }
   tags { id name }
   dashboard { users posts tags comments reviews }
 }
 
-mutation DeletePost($id: ID!) {
-  deletePost(id: $id)
+
+# ---------------------------------------------------------------------
+# 2. SEARCH POSTS  (searching + sorting + pagination together)
+#    sort accepts NEWEST, OLDEST, TITLE_ASC, TITLE_DESC.
+#    Remove "keyword" to list everything.
+# ---------------------------------------------------------------------
+{
+  posts(filter: { keyword: "spring", sort: NEWEST, page: 0, size: 5 }) {
+    page
+    size
+    totalElements
+    totalPages
+    items {
+      id
+      title
+      authorId
+      tags { id name }
+    }
+  }
 }
+
+
+# ---------------------------------------------------------------------
+# 3. ASK FOR LESS AND GET LESS
+#    The same search as block 2, but only the titles. Run both and
+#    compare the size of the two responses. This is the whole point
+#    of GraphQL next to REST.
+# ---------------------------------------------------------------------
+{
+  posts(filter: { keyword: "spring", size: 5 }) {
+    items { title }
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 4. CREATE A USER
+#    Copy the "id" from the response, you need it in block 6.
+#    Usernames and emails must be unique: change them before re-running,
+#    or you will get "This username is already taken."
+# ---------------------------------------------------------------------
+mutation {
+  createUser(input: {
+    username: "graphql_author",
+    email: "graphql_author@example.test",
+    displayName: "GraphQL Author"
+  }) {
+    id
+    username
+    displayName
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 5. CREATE A TAG
+#    Tag names must also be unique. The name is trimmed and lowercased
+#    by the server, so "  SPRING-BOOT  " comes back as "spring-boot".
+# ---------------------------------------------------------------------
+mutation {
+  createTag(input: { name: "  GRAPHQL-DEMO  " }) {
+    id
+    name
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 6. CREATE A POST
+#    Replace authorId with the id from block 4 and tagIds with the id
+#    from block 5. Titles must be unique, ignoring case and spaces.
+# ---------------------------------------------------------------------
+mutation {
+  createPost(
+    authorId: 1
+    input: {
+      title: "My first post written in GraphiQL"
+      body: "Created from the GraphQL playground."
+      tagIds: [1]
+    }
+  ) {
+    id
+    title
+    tags { id name }
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 7. ADD A COMMENT  (this one writes to MongoDB)
+#    Replace postId and authorId with your own IDs.
+#    The service checks the post and the author in PostgreSQL first,
+#    then stores the comment in MongoDB with the author's name copied in.
+# ---------------------------------------------------------------------
+mutation {
+  addComment(postId: 1, authorId: 1, input: { body: "  Very useful article.  " }) {
+    id
+    body
+    authorName
+    createdAt
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 8. ADD A REVIEW  (also MongoDB)
+#    Run it TWICE with the same reviewerId: the second one fails with
+#    code CONFLICT, because of the unique index on (postId, reviewerId).
+# ---------------------------------------------------------------------
+mutation {
+  addReview(postId: 1, reviewerId: 1, input: { rating: 5, text: "Clear and complete." }) {
+    id
+    rating
+    text
+    reviewerName
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 9. ONE POST WITH ITS WHOLE DISCUSSION
+#    PostgreSQL and MongoDB, three resources, one single request.
+#    Over REST this would be three separate calls.
+# ---------------------------------------------------------------------
+{
+  post(id: 1) {
+    id
+    title
+    body
+    tags { name }
+  }
+  comments(postId: 1) {
+    id
+    body
+    authorName
+  }
+  reviews(postId: 1) {
+    averageRating
+    reviews { rating text reviewerName }
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 10. HOW ERRORS LOOK
+#     GraphQL always answers HTTP 200. The problem is inside the body,
+#     under "errors", with our own code in extensions.code = NOT_FOUND.
+#     It is the same BlogException that REST turns into a 404.
+# ---------------------------------------------------------------------
+{
+  post(id: 999999) {
+    id
+    title
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 11. HOW VALIDATION ERRORS LOOK
+#     Username too short, email invalid, display name empty.
+#     One message per broken rule, from the Bean Validation annotations.
+# ---------------------------------------------------------------------
+mutation {
+  createUser(input: { username: "x", email: "not-an-email", displayName: "" }) {
+    id
+  }
+}
+
+
+# ---------------------------------------------------------------------
+# 12. UPDATE AND DELETE
+#     Delete is soft: the post is hidden, not removed, and block 9
+#     will answer null for it afterwards.
+# ---------------------------------------------------------------------
+mutation {
+  updateTag(id: 1, input: { name: "spring" }) {
+    id
+    name
+  }
+}
+
+# mutation {
+#   deletePost(id: 1)
+# }

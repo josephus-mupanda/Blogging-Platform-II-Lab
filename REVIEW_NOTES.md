@@ -103,6 +103,32 @@ correct behaviour, not a bug. `/graphql` only accepts `POST` with a JSON body, a
 browser address bar always sends `GET`. The page you want is `/graphiql` with the extra
 **i**. Use `/graphql` from Postman, curl, or GraphiQL instead.
 
+### Using GraphiQL
+
+GraphiQL opens with an **empty editor**. It never loads your queries for you, and nothing
+is wrong when the page looks blank. It gives you two things instead:
+
+- **Docs** (the book icon, top left). This is the schema browser. Click **`query: Query`**
+  to see all 10 queries the API offers, and **`mutation: Mutation`** to see all 13
+  mutations, each with its arguments and return type. This is how you "see everything that
+  exists" — but it shows the *shape* of each operation, not runnable text.
+- **History** (the clock icon, below Docs). Every query you actually run is saved here, so
+  after the first run you can click an old one to load it again. This is the closest thing
+  to a saved list, and it fills up as you work.
+
+To get runnable text, paste it from
+[docs/examples.graphql](examples.graphql). That file holds 12 numbered blocks with every
+value written inline, so nothing needs to go in the Variables panel.
+
+Two habits that save time:
+
+- **Paste one block at a time.** With several operations in the editor at once, GraphiQL
+  has to ask which one you meant. Use the **`+`** tab button to keep blocks side by side.
+- **Press Ctrl+Space** anywhere in the editor for autocomplete. It knows every field in the
+  schema, which is the fastest way to build a query by hand in front of a reviewer.
+
+Run a query with the pink play button or **Ctrl+Enter**.
+
 ### Testing with Postman
 
 [docs/postman_collection.json](postman_collection.json) is a ready collection: 40
