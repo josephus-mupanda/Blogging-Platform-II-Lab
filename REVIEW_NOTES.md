@@ -96,10 +96,13 @@ GraphiQL keep showing their pages while every request from them fails. Confirm i
 at any moment with:
 
 ```powershell
-Get-NetTCPConnection -State Listen -LocalPort 8080
+if (Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue) { 'RUNNING' } else { 'NOT RUNNING' }
 ```
 
-No output means nothing is running.
+`-ErrorAction SilentlyContinue` matters. Without it, `Get-NetTCPConnection` does not return
+nothing when the port is free: it prints a long red error, `No matching
+MSFT_NetTCPConnection objects found`. That red block means the port is **free**, which is
+confusing enough that the version above is worth using instead. It answers with one word.
 
 ### Freeing port 8080
 
@@ -114,14 +117,16 @@ Web server failed to start. Port 8080 was already in use.
 Nothing is broken; a copy is simply still alive. See who holds the port, then stop it:
 
 ```powershell
-Get-NetTCPConnection -State Listen -LocalPort 8080 | ForEach-Object {
+Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue | ForEach-Object {
   Get-CimInstance Win32_Process -Filter "ProcessId=$($_.OwningProcess)" | Select-Object ProcessId, CreationDate
 }
 ```
 
 ```powershell
-Get-NetTCPConnection -State Listen -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
+
+Both are safe to run when the port is already free: they simply do nothing.
 
 Then start it again from whichever place you actually want. Before a demo, pick one, and
 close the other so this cannot interrupt you.
@@ -215,7 +220,7 @@ mongosh "mongodb://localhost:27017/blogging_platform_ii" --quiet --eval "db.comm
 If port 8080 is already busy, an old run is still alive. Find and stop it:
 
 ```powershell
-Get-NetTCPConnection -State Listen -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
 ---
@@ -989,11 +994,11 @@ demo in section 9 are the testing evidence.
 |---|---|
 | `FATAL: database "blogging_platform_ii" does not exist` | The first-time setup in section 2 was not run. |
 | `relation "posts" does not exist` | The database exists but `db/schema.sql` was not applied to it. |
-| `Connection refused` on port 5433 | PostgreSQL is not running, or is on 5432. Check with `Get-NetTCPConnection -State Listen -LocalPort 5433`. |
+| `Connection refused` on port 5433 | PostgreSQL is not running, or is on 5432. Check with `Get-NetTCPConnection -State Listen -LocalPort 5433 -ErrorAction SilentlyContinue`. |
 | Startup hangs then fails on MongoDB | MongoDB is not running on 27017. The URI has a 3 second timeout, so it fails rather than hanging forever. |
 | `Port 8080 was already in use` | An earlier run is still alive, often one started from the terminal while you now press Run in the IDE. Only one can hold the port. See "Freeing port 8080" in section 2. |
 | GraphiQL returns 404 | The `prod` profile is active, which disables it. Clear `SPRING_PROFILES_ACTIVE`. |
-| GraphiQL shows `"message": "Failed to fetch"` | Not a GraphQL error at all: the browser reached no server. The application has stopped, or was restarted since the page was opened. Start it again, then reload the page. Check first with `Get-NetTCPConnection -State Listen -LocalPort 8080`; no output means nothing is running. |
+| GraphiQL shows `"message": "Failed to fetch"` | Not a GraphQL error at all: the browser reached no server. The application has stopped, or was restarted since the page was opened. Start it again, then reload the page. Check first with the one-word command in section 2. A red `No matching MSFT_NetTCPConnection objects found` error also means nothing is running. |
 | Swagger or GraphiQL worked a minute ago and now fails | Same cause. A browser tab stays open long after the application behind it has exited, so the page still looks fine until you press run. |
 | `psql` / `createdb` "not recognized as the name of a cmdlet" | Not on PATH. Run `$env:Path += ";C:\Program Files\PostgreSQL\18\bin"`, or apply the permanent fix in section 2. |
 | `psql: could not open file "db/schema.sql"` | You are not in the repository root. `cd` there first, or give the full path to the file. |
