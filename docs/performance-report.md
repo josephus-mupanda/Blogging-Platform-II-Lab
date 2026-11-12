@@ -2,7 +2,7 @@
 
 This report answers two questions:
 
-1. **Did the indexes make the search faster?** Yes, about 50 times faster.
+1. **Did the indexes make the search faster?** Yes, between 50 and 200 times faster.
 2. **Is GraphQL better than REST?** It is not faster, but its answers are 18 times smaller.
 
 The test database holds **20,000 posts**. The word `springneedle` appears in **200** of
@@ -37,14 +37,26 @@ one by one. Same query, same data, same machine. Only the indexes change.
 
 ### The command
 
-Paste all three lines. The first two have to be repeated in **every new terminal**, because
-PowerShell forgets them when the window closes.
+Paste this whole block. It runs the three queries and prints **only the summary table**.
 
 ```powershell
 $env:Path += ";C:\Program Files\PostgreSQL\18\bin"
 $env:PGPASSWORD = 'postgres'
-psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
+
+$out = psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql 2>&1 | Out-String
+$ms = [regex]::Matches($out, 'Execution Time: ([\d.]+) ms') | ForEach-Object { [double]$_.Groups[1].Value }
+$scan = [regex]::Matches($out, '->  (Index Scan using \S+|Bitmap Heap Scan|Seq Scan) on') | ForEach-Object { $_.Groups[1].Value }
+@(
+  [pscustomobject]@{ Test='1. Show page of 10 newest matches'; Indexes='ON'; How=$scan[0]; 'Time (ms)'=$ms[0] }
+  [pscustomobject]@{ Test='2. Count the 200 matches';          Indexes='ON'; How=$scan[1]; 'Time (ms)'=$ms[1] }
+  [pscustomobject]@{ Test='3. Count the 200 matches';          Indexes='OFF';How=$scan[2]; 'Time (ms)'=$ms[2] }
+) | Format-Table -AutoSize
+"RESULT: counting is {0:N0} times faster with indexes ({1} ms -> {2} ms)" -f ($ms[2]/$ms[1]), $ms[2], $ms[1]
 ```
+
+`db/benchmark.sql` on its own prints the full `EXPLAIN` plan for each query, which is about
+fifty lines. The block above runs the same script and keeps only the three timings and the
+scan type.
 
 If you skip the first line you get `psql : The term 'psql' is not recognized`. To stop
 having to repeat it, run the permanent fix once and reopen PowerShell:
@@ -55,14 +67,27 @@ having to repeat it, run the permanent fix once and reopen PowerShell:
 
 ### The result
 
-Look for the lines that say `Execution Time` near the bottom of the output.
+The block prints exactly this, and nothing else:
+
+```
+Test                              Indexes How                                        Time (ms)
+----                              ------- ---                                        ---------
+1. Show page of 10 newest matches ON      Index Scan using idx_posts_visible_created    32.649
+2. Count the 200 matches          ON      Bitmap Heap Scan                              10.361
+3. Count the 200 matches          OFF     Seq Scan                                    2009.312
+
+RESULT: counting is 194 times faster with indexes (2009.312 ms -> 10.361 ms)
+```
+
+Rows 2 and 3 are the comparison. Same query, same 20,000 posts, same machine. The only
+difference is whether the indexes are allowed:
 
 | | How PostgreSQL searched | Time |
 |---|---|---:|
-| **Before** (indexes off) | Read all 20,000 rows: `Seq Scan on posts` | **376.76 ms** |
-| **After** (indexes on) | Jumped straight to the matches: `Bitmap Index Scan` | **8.04 ms** |
+| **Before** (indexes off) | Read all 20,000 rows one by one: `Seq Scan` | **2009.31 ms** |
+| **After** (indexes on) | Jumped straight to the 200 matches: `Bitmap Heap Scan` | **10.36 ms** |
 
-**The search is about 47 times faster with the indexes.**
+**Counting was 194 times faster with the indexes in this run.**
 
 ### What this means
 
@@ -73,11 +98,13 @@ are trigram indexes, which means PostgreSQL can use them even when the search is
 Without them, the database must open every post and look inside it. With them, it goes
 straight to the 200 that match.
 
-**Note on the exact number.** Run the command again and you will not get 47 times. We got
-167, 95 and 50 on different runs of the same machine. The timings change because the
-computer is busier or quieter, and because PostgreSQL remembers recent data in memory. What
-never changes is that the indexed version wins by a very large margin. Say "about 50 times
-faster" or "two orders of magnitude", not one exact number.
+**Note on the exact number.** Run the command again and you will get a different figure. On
+this machine we measured 47, 50, 89, 95, 167 and 194 times on separate runs. The timings
+move because the computer is busier or quieter, and because PostgreSQL keeps recent data in
+memory. What never changes is that the indexed version wins by a very large margin.
+
+So say **"between fifty and two hundred times faster"**, or "two orders of magnitude". Do
+not quote a single number, because the next run will not reproduce it.
 
 ---
 

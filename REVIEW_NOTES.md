@@ -837,34 +837,53 @@ root, so run these from there or `psql` will report that it cannot open the file
 
 This is the strongest number in the whole project, and it is one command:
 
+Running `db/benchmark.sql` directly prints about fifty lines of `EXPLAIN` plan, which is
+too much to read out in a demo. Paste this instead: it runs the same script and prints
+only the summary.
+
 ```powershell
 $env:Path += ";C:\Program Files\PostgreSQL\18\bin"
 $env:PGPASSWORD = 'postgres'
-psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
+
+$out = psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql 2>&1 | Out-String
+$ms = [regex]::Matches($out, 'Execution Time: ([\d.]+) ms') | ForEach-Object { [double]$_.Groups[1].Value }
+$scan = [regex]::Matches($out, '->  (Index Scan using \S+|Bitmap Heap Scan|Seq Scan) on') | ForEach-Object { $_.Groups[1].Value }
+@(
+  [pscustomobject]@{ Test='1. Show page of 10 newest matches'; Indexes='ON'; How=$scan[0]; 'Time (ms)'=$ms[0] }
+  [pscustomobject]@{ Test='2. Count the 200 matches';          Indexes='ON'; How=$scan[1]; 'Time (ms)'=$ms[1] }
+  [pscustomobject]@{ Test='3. Count the 200 matches';          Indexes='OFF';How=$scan[2]; 'Time (ms)'=$ms[2] }
+) | Format-Table -AutoSize
+"RESULT: counting is {0:N0} times faster with indexes ({1} ms -> {2} ms)" -f ($ms[2]/$ms[1]), $ms[2], $ms[1]
 ```
 
-The first two lines are only needed once per terminal, but they are included here so the
-block works on its own. Without them you get `psql : The term 'psql' is not recognized`.
+It prints this and nothing else:
 
-Scroll to the three `Execution Time` lines at the bottom. Three real runs on this machine:
+```
+Test                              Indexes How                                        Time (ms)
+----                              ------- ---                                        ---------
+1. Show page of 10 newest matches ON      Index Scan using idx_posts_visible_created    32.649
+2. Count the 200 matches          ON      Bitmap Heap Scan                              10.361
+3. Count the 200 matches          OFF     Seq Scan                                    2009.312
 
-| What the plan did | Run A | Run B | Run C |
-|---|---:|---:|---:|
-| Newest 10 matches, using `idx_posts_visible_created` | 14.2 ms | 8.5 ms | 28.5 ms |
-| Count using both trigram indexes (`Bitmap Index Scan`) | **6.4 ms** | **3.4 ms** | **6.4 ms** |
-| The same count forced to `Seq Scan` | **1067.6 ms** | **320.1 ms** | **322.8 ms** |
-| Ratio | 167x | 95x | 50x |
+RESULT: counting is 194 times faster with indexes (2009.312 ms -> 10.361 ms)
+```
 
-The last two rows are the same query over the same rows. The only difference is whether
-PostgreSQL is allowed to use its indexes, and the indexed version wins every time by a
-wide margin. That is the clearest possible answer to "what did indexing buy you?".
+Rows 2 and 3 are the comparison: the same query over the same rows, with the indexes
+allowed and then forbidden. That is the clearest possible answer to "what did indexing buy
+you?".
 
-**Quote the order of magnitude, never a single multiple.** Three runs on the same machine
-over the same data gave 167x, 95x and 50x, because absolute timings depend on machine load
-and on what PostgreSQL already has cached. "Between one and two orders of magnitude" is
-both true and unshakeable; "47 times faster" invites a reviewer to re-run it and get
-something else. If that happens, the answer is that the ratio moves and the conclusion does
-not.
+**Do not quote a single multiple.** Separate runs on this machine gave 47, 50, 89, 95, 167
+and 194 times, because the timings depend on machine load and on what PostgreSQL already
+has cached. Say "between fifty and two hundred times", or "two orders of magnitude". If a
+reviewer re-runs it and sees a different number, that is expected and the conclusion is
+unchanged.
+
+If you want the full plan text to point at `Seq Scan on posts` versus `Bitmap Index Scan`,
+run the script on its own:
+
+```powershell
+psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
+```
 
 Point at the plan text itself while explaining: `Bitmap Index Scan on idx_posts_title_trgm`
 and `idx_posts_body_trgm` combined by a `BitmapOr`, versus `Seq Scan on posts`.
