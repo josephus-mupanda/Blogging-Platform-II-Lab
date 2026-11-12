@@ -203,6 +203,8 @@ both stores before a demo so the dashboard numbers are clean and every comment p
 post you can actually show. Stop the app first.
 
 ```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+$env:PGPASSWORD = 'postgres'
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii -c "TRUNCATE post_tags, posts, tags, users RESTART IDENTITY CASCADE;"
 mongosh "mongodb://localhost:27017/blogging_platform_ii" --quiet --eval "db.comments.deleteMany({}); db.reviews.deleteMany({})"
 ```
@@ -453,6 +455,9 @@ before being asked is much stronger than being caught by it.
 With the app running and at least one comment created, show both stores:
 
 ```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+$env:PGPASSWORD = 'postgres'
+
 # PostgreSQL: the post
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii -c "SELECT post_id, title FROM posts WHERE deleted_at IS NULL ORDER BY post_id;"
 
@@ -833,8 +838,13 @@ root, so run these from there or `psql` will report that it cannot open the file
 This is the strongest number in the whole project, and it is one command:
 
 ```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+$env:PGPASSWORD = 'postgres'
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
 ```
+
+The first two lines are only needed once per terminal, but they are included here so the
+block works on its own. Without them you get `psql : The term 'psql' is not recognized`.
 
 Scroll to the three `Execution Time` lines at the bottom. Three real runs on this machine:
 

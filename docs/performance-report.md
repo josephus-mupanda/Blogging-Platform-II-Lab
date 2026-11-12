@@ -37,8 +37,20 @@ one by one. Same query, same data, same machine. Only the indexes change.
 
 ### The command
 
+Paste all three lines. The first two have to be repeated in **every new terminal**, because
+PowerShell forgets them when the window closes.
+
 ```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+$env:PGPASSWORD = 'postgres'
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
+```
+
+If you skip the first line you get `psql : The term 'psql' is not recognized`. To stop
+having to repeat it, run the permanent fix once and reopen PowerShell:
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';C:\Program Files\PostgreSQL\18\bin', 'User')
 ```
 
 ### The result
