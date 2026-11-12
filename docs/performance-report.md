@@ -25,7 +25,7 @@ GraphQL's compact selection removes post bodies and other fields from the respon
 | Count via a bitmap scan combining both trigram indexes | 8.04 ms | 232 |
 | Same count via a sequential scan with bitmap scans disabled | 376.76 ms | 2,223 |
 
-The indexed count took about one-forty-seventh of the sequential scan time in this run. The ordered page scan rejected 891 rows before it reached the tenth match.
+The indexed count took about one-forty-seventh of the sequential scan time in this run. The ordered page scan rejected 891 rows before it reached the tenth match. Repeating the script gives a different multiple each time, because both timings depend on machine load and on what PostgreSQL already has cached; later runs on this machine produced ratios of 167, 95 and 50. The conclusion that holds across every run is that the indexed count is between one and two orders of magnitude faster, which matters more than any single multiple.
 
 The count and page queries share a filter. The count can combine the title and body trigram indexes. PostgreSQL can use the visible-post timestamp index to stop after it has found enough rows in order for a small first page. Each result page makes one additional query for all its tags, which the repository groups by post ID with a hash map. Stable sort ties use the post ID. Deep offsets still require the database to skip earlier matches.
 

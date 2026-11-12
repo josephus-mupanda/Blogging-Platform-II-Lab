@@ -32,9 +32,42 @@ repository, and every class gets its dependencies through its constructor.
 - PostgreSQL on port 5433 with the `pg_trgm` extension available
 - MongoDB on port 27017
 
-`psql` and `createdb` are not on PATH by default. They live in the PostgreSQL `bin`
-folder, for example `C:\Program Files\PostgreSQL\18\bin`. Either call them with the full
-path or add that folder to PATH.
+### Put psql on PATH first
+
+**Do this before anything else.** The PostgreSQL installer does not add its command line
+tools to PATH, so `psql` and `createdb` fail with "not recognized as the name of a cmdlet"
+until you fix it. This machine has the tools in `C:\Program Files\PostgreSQL\18\bin`.
+
+For the terminal you have open right now:
+
+```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+```
+
+To fix it once and for all, so every new terminal works:
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';C:\Program Files\PostgreSQL\18\bin', 'User')
+```
+
+The permanent version only affects terminals opened **after** it runs, so close and reopen
+PowerShell afterwards. Check it worked:
+
+```powershell
+psql --version
+```
+
+Note there is also a `C:\Program Files\PostgreSQL\16` folder on this machine, but it has no
+`psql.exe` in it. Use the `18` path; it is the one that matches the running server.
+
+### Avoiding the password prompt
+
+Every `psql` and `createdb` command prompts for the `postgres` password, which is
+`postgres` on this machine. To stop it asking during a demo, set it for the session:
+
+```powershell
+$env:PGPASSWORD = 'postgres'
+```
 
 ### First time only
 
@@ -708,6 +741,16 @@ that one.
 
 ### Set it up (once)
 
+If `psql` is not recognised, this terminal has not had PATH fixed yet. Run these two lines
+first and the rest of the section will work:
+
+```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+$env:PGPASSWORD = 'postgres'
+```
+
+Then, from the repository root:
+
 ```powershell
 createdb -h localhost -p 5433 -U postgres blogging_platform_ii_bench
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/schema.sql
@@ -715,7 +758,8 @@ psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchm
 ```
 
 `db/benchmark.sql` seeds the 20,000 posts and then prints the query plans. It is safe to
-rerun; the seed skips rows that already exist.
+rerun; the seed skips rows that already exist. The paths are relative to the repository
+root, so run these from there or `psql` will report that it cannot open the file.
 
 ### Part 1 — the database: indexed versus not indexed
 
@@ -725,17 +769,25 @@ This is the strongest number in the whole project, and it is one command:
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -f db/benchmark.sql
 ```
 
-Scroll to the three `Execution Time` lines at the bottom. A real run on this machine:
+Scroll to the three `Execution Time` lines at the bottom. Three real runs on this machine:
 
-| What the plan did | Execution time |
-|---|---:|
-| Newest 10 matches, using `idx_posts_visible_created` | 14.2 ms |
-| Count using both trigram indexes (`Bitmap Index Scan`) | **6.4 ms** |
-| The same count forced to `Seq Scan` | **1067.6 ms** |
+| What the plan did | Run A | Run B | Run C |
+|---|---:|---:|---:|
+| Newest 10 matches, using `idx_posts_visible_created` | 14.2 ms | 8.5 ms | 28.5 ms |
+| Count using both trigram indexes (`Bitmap Index Scan`) | **6.4 ms** | **3.4 ms** | **6.4 ms** |
+| The same count forced to `Seq Scan` | **1067.6 ms** | **320.1 ms** | **322.8 ms** |
+| Ratio | 167x | 95x | 50x |
 
-The last two are the same query over the same rows. The only difference is whether
-PostgreSQL is allowed to use the indexes. That is roughly **160 times faster**, and it is
-the clearest possible answer to "what did indexing buy you?".
+The last two rows are the same query over the same rows. The only difference is whether
+PostgreSQL is allowed to use its indexes, and the indexed version wins every time by a
+wide margin. That is the clearest possible answer to "what did indexing buy you?".
+
+**Quote the order of magnitude, never a single multiple.** Three runs on the same machine
+over the same data gave 167x, 95x and 50x, because absolute timings depend on machine load
+and on what PostgreSQL already has cached. "Between one and two orders of magnitude" is
+both true and unshakeable; "47 times faster" invites a reviewer to re-run it and get
+something else. If that happens, the answer is that the ratio moves and the conclusion does
+not.
 
 Point at the plan text itself while explaining: `Bitmap Index Scan on idx_posts_title_trgm`
 and `idx_posts_body_trgm` combined by a `BitmapOr`, versus `Seq Scan on posts`.
@@ -879,5 +931,6 @@ demo in section 9 are the testing evidence.
 | Startup hangs then fails on MongoDB | MongoDB is not running on 27017. The URI has a 3 second timeout, so it fails rather than hanging forever. |
 | `Port 8080 was already in use` | An earlier run is still alive. Use the stop command in section 2. |
 | GraphiQL returns 404 | The `prod` profile is active, which disables it. Clear `SPRING_PROFILES_ACTIVE`. |
-| `psql` or `createdb` not recognised | Not on PATH. Use the full path from section 2. |
+| `psql` / `createdb` "not recognized as the name of a cmdlet" | Not on PATH. Run `$env:Path += ";C:\Program Files\PostgreSQL\18\bin"`, or apply the permanent fix in section 2. |
+| `psql: could not open file "db/schema.sql"` | You are not in the repository root. `cd` there first, or give the full path to the file. |
 | No `ServiceMonitoring` lines in the console | The app was started without the DEBUG argument from section 2. |

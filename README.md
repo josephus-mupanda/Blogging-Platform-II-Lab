@@ -35,7 +35,19 @@ psql -h localhost -p 5433 -U postgres -d blogging_platform_ii -f db/schema.sql
 .\mvnw.cmd spring-boot:run
 ```
 
-`createdb` and `psql` live in the PostgreSQL `bin` folder, for example `C:\Program Files\PostgreSQL\18\bin`. Call them with the full path or add that folder to `PATH`. Use `./mvnw` on macOS or Linux.
+The PostgreSQL installer does not put `createdb` and `psql` on `PATH`, so both commands fail with "not recognized as the name of a cmdlet" until that folder is added. Add it for the current terminal, then run the commands above:
+
+```powershell
+$env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+```
+
+To add it for every future terminal instead, set it on the user `PATH` and then reopen PowerShell:
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';C:\Program Files\PostgreSQL\18\bin', 'User')
+```
+
+Both commands prompt for the `postgres` password; `$env:PGPASSWORD = 'postgres'` suppresses the prompt for the session. Use `./mvnw` on macOS or Linux.
 
 [db/schema.sql](db/schema.sql) creates the tables and indexes designed in Platform I. It only creates what is missing, so it is safe to run again, and it can also be run against an existing Platform I database to add the columns this phase uses. If an older database has duplicate titles that differ only by case or surrounding spaces, resolve those duplicates first so the unique title index can be created. MongoDB needs no setup script because it creates its collections and indexes on first use.
 
