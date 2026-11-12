@@ -178,21 +178,42 @@ validation failures, and cleanup. In Postman choose **Import**, pick that file, 
 folders top to bottom. The create requests save their new IDs into collection variables, so
 every later request finds its post, user, tag, and comment without any copying by hand.
 
-### Start with the AOP timing logs visible
+### Seeing the AOP logging and timing
 
-The aspect logs at DEBUG, which is off by default. Turn it on when you want to show Epic 5:
+The aspect logs at DEBUG. DEBUG is off by default in Spring Boot, which is why nothing
+appears in the console unless it is switched on. The `dev` profile now switches it on:
 
-```powershell
-.\mvnw.cmd spring-boot:run '-Dspring-boot.run.arguments=--logging.level.com.example.Blogging_Platform_II.config.ServiceMonitoring=DEBUG'
+```properties
+logging.level.com.example.Blogging_Platform_II.config.ServiceMonitoring=DEBUG
 ```
 
-Then call any endpoint and watch the console:
+So just start the app normally, from the terminal or the IDE Run button, and call any
+endpoint. Creating one post through `POST /api/users` then `POST /api/posts` prints this:
 
 ```
-DEBUG ServiceMonitoring : Entering TagService.list()
-DEBUG ServiceMonitoring : Leaving TagService.list()
-DEBUG ServiceMonitoring : TagService.list() success in 44.2331 ms
+Entering UserService.usernameExists(..)
+Leaving UserService.usernameExists(..)
+UserService.usernameExists(..) success in 54.5788 ms
+Entering UserService.emailExists(..)
+Leaving UserService.emailExists(..)
+UserService.emailExists(..) success in 8.990099 ms
+Entering UserService.create(..)
+Leaving UserService.create(..)
+UserService.create(..) success in 47.2572 ms
+Entering PostService.create(..)
+Leaving PostService.create(..)
+PostService.create(..) success in 81.6665 ms
 ```
+
+Three lines per call, in this order: `@Before`, `@After`, then `@Around` reporting the
+elapsed time. All three advice types in one screenshot.
+
+The first two pairs are worth pointing out: `usernameExists` and `emailExists` are called by
+`UniqueAccountValidator`, so the log also proves the custom validator really queries the
+database.
+
+To turn it off, comment out that line in `application-dev.properties`. The `prod` profile
+never had it, so production stays quiet.
 
 Those three lines are `@Before`, `@After`, and `@Around` in that order.
 
@@ -720,6 +741,18 @@ Spring wraps every matching bean in a proxy. When a controller calls
 `postService.search(...)` it is really calling the proxy, which runs `@Before`, then the
 real method, then `@After`, with `@Around` wrapped around the whole thing to time it. Add
 a new service tomorrow and it gets logging and timing for free, with no code change.
+
+It covers **30 public methods** across the five services: `AnalyticsService` 2,
+`DiscussionService` 8, `PostService` 6, `TagService` 6, `UserService` 8. Repositories and
+controllers are not matched, because they are not in the `service` package.
+
+**One gotcha, worth knowing before a reviewer finds it.** `PostService.create` calls
+`get(id)` at the end to return the saved post, yet no `Entering PostService.get(..)` line
+appears in the log. That is not a bug in the aspect. The proxy sits *around* the bean, so
+only calls arriving from outside pass through it. A method calling another method of its
+own class calls it directly, and the proxy never sees it. This is the classic limitation of
+Spring's proxy-based AOP, and the honest answer if asked is that self-invocation bypasses
+the advice.
 
 **Profiles.** `application.properties` is always loaded. On top of it Spring loads
 `application-{profile}.properties` for whichever profile is active, and those values win.
