@@ -90,6 +90,17 @@ startup because of `spring.data.mongodb.auto-index-creation=true`.
 
 Use `./mvnw` on macOS or Linux. Startup takes about 15 seconds. Stop it with `Ctrl+C`.
 
+**Leave this terminal open for the whole session.** The application only runs while that
+command is running. Close it, press `Ctrl+C`, or let the machine sleep, and Swagger UI and
+GraphiQL keep showing their pages while every request from them fails. Confirm it is alive
+at any moment with:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 8080
+```
+
+No output means nothing is running.
+
 ### Open these
 
 | URL | What it is |
@@ -957,6 +968,8 @@ demo in section 9 are the testing evidence.
 | Startup hangs then fails on MongoDB | MongoDB is not running on 27017. The URI has a 3 second timeout, so it fails rather than hanging forever. |
 | `Port 8080 was already in use` | An earlier run is still alive. Use the stop command in section 2. |
 | GraphiQL returns 404 | The `prod` profile is active, which disables it. Clear `SPRING_PROFILES_ACTIVE`. |
+| GraphiQL shows `"message": "Failed to fetch"` | Not a GraphQL error at all: the browser reached no server. The application has stopped, or was restarted since the page was opened. Start it again, then reload the page. Check first with `Get-NetTCPConnection -State Listen -LocalPort 8080`; no output means nothing is running. |
+| Swagger or GraphiQL worked a minute ago and now fails | Same cause. A browser tab stays open long after the application behind it has exited, so the page still looks fine until you press run. |
 | `psql` / `createdb` "not recognized as the name of a cmdlet" | Not on PATH. Run `$env:Path += ";C:\Program Files\PostgreSQL\18\bin"`, or apply the permanent fix in section 2. |
 | `psql: could not open file "db/schema.sql"` | You are not in the repository root. `cd` there first, or give the full path to the file. |
 | No `ServiceMonitoring` lines in the console | The app was started without the DEBUG argument from section 2. |
