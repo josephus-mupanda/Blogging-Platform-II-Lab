@@ -101,6 +101,31 @@ Get-NetTCPConnection -State Listen -LocalPort 8080
 
 No output means nothing is running.
 
+### Freeing port 8080
+
+**Run the application from one place only.** The terminal and the IDE Run button are two
+separate launches, and only one of them can hold port 8080. Starting the second gives:
+
+```
+APPLICATION FAILED TO START
+Web server failed to start. Port 8080 was already in use.
+```
+
+Nothing is broken; a copy is simply still alive. See who holds the port, then stop it:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 8080 | ForEach-Object {
+  Get-CimInstance Win32_Process -Filter "ProcessId=$($_.OwningProcess)" | Select-Object ProcessId, CreationDate
+}
+```
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+Then start it again from whichever place you actually want. Before a demo, pick one, and
+close the other so this cannot interrupt you.
+
 ### Open these
 
 | URL | What it is |
@@ -966,7 +991,7 @@ demo in section 9 are the testing evidence.
 | `relation "posts" does not exist` | The database exists but `db/schema.sql` was not applied to it. |
 | `Connection refused` on port 5433 | PostgreSQL is not running, or is on 5432. Check with `Get-NetTCPConnection -State Listen -LocalPort 5433`. |
 | Startup hangs then fails on MongoDB | MongoDB is not running on 27017. The URI has a 3 second timeout, so it fails rather than hanging forever. |
-| `Port 8080 was already in use` | An earlier run is still alive. Use the stop command in section 2. |
+| `Port 8080 was already in use` | An earlier run is still alive, often one started from the terminal while you now press Run in the IDE. Only one can hold the port. See "Freeing port 8080" in section 2. |
 | GraphiQL returns 404 | The `prod` profile is active, which disables it. Clear `SPRING_PROFILES_ACTIVE`. |
 | GraphiQL shows `"message": "Failed to fetch"` | Not a GraphQL error at all: the browser reached no server. The application has stopped, or was restarted since the page was opened. Start it again, then reload the page. Check first with `Get-NetTCPConnection -State Listen -LocalPort 8080`; no output means nothing is running. |
 | Swagger or GraphiQL worked a minute ago and now fails | Same cause. A browser tab stays open long after the application behind it has exited, so the page still looks fine until you press run. |
