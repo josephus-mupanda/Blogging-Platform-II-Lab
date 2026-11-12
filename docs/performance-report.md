@@ -47,12 +47,24 @@ Seed the posts and print the query plans in a second terminal. The `EXPLAIN (ANA
 psql -h localhost -p 5433 -U postgres -d blogging_platform_ii_bench -v ON_ERROR_STOP=1 -f db/benchmark.sql
 ```
 
-For the HTTP table, time the same search on each API. Send the request a few times first so the JVM and the database cache warm up, then record `time_total` over a run of requests and take the median and the 95th percentile.
+For the HTTP table, run the block below in a second terminal while the application is running. It discards 20 warm-up calls per variant so the JVM and the database cache are warm, measures the next 100, sorts them, and reports the median, the 95th percentile, and the response size.
 
 ```powershell
-curl.exe -s -o NUL -w "%{time_total} %{size_download}`n" "http://localhost:8080/api/posts?keyword=springneedle&page=0&size=10"
-
-curl.exe -s -o NUL -w "%{time_total} %{size_download}`n" -X POST http://localhost:8080/graphql -H "Content-Type: application/json" -d "{\"query\":\"{ posts(filter: {keyword: \\\"springneedle\\\", page: 0, size: 10}) { totalElements items { id title } } }\"}"
+$rest = 'http://localhost:8080/api/posts?keyword=springneedle&page=0&size=10'
+$gqlUrl = 'http://localhost:8080/graphql'
+$compact = @{ query = '{ posts(filter: {keyword: "springneedle", page: 0, size: 10}) { page size totalElements totalPages items { id title } } }' } | ConvertTo-Json -Compress
+$full = @{ query = '{ posts(filter: {keyword: "springneedle", page: 0, size: 10}) { page size totalElements totalPages items { id title authorId body createdAt updatedAt tags { id name } } } }' } | ConvertTo-Json -Compress
+$calls = [ordered]@{
+  'REST'                        = { Invoke-WebRequest $rest -UseBasicParsing }
+  'GraphQL, full post fields'   = { Invoke-WebRequest $gqlUrl -Method Post -ContentType 'application/json' -Body $full -UseBasicParsing }
+  'GraphQL, post IDs and titles'= { Invoke-WebRequest $gqlUrl -Method Post -ContentType 'application/json' -Body $compact -UseBasicParsing }
+}
+$calls.GetEnumerator() | ForEach-Object {
+  $b = $_.Value
+  1..20 | ForEach-Object { & $b | Out-Null }
+  $t = (1..100 | ForEach-Object { (Measure-Command { & $b | Out-Null }).TotalMilliseconds }) | Sort-Object
+  [pscustomobject]@{ API = $_.Key; 'p50 ms' = [math]::Round($t[49],1); 'p95 ms' = [math]::Round($t[94],1); 'bytes' = (& $b).RawContentLength }
+} | Format-Table -AutoSize
 ```
 
-The first command is the REST variant. The second is the compact GraphQL variant; add `body authorId createdAt updatedAt tags { id name }` to the selection to measure the full GraphQL variant.
+The three payload sizes reproduce exactly, because they depend only on the fields each variant selects. The millisecond figures do not: they depend on what else the machine is doing at the time, and this block uses a lighter sampling scheme than the original measurement above (20 warm-up and 100 measured calls per variant, without connection reuse or order rotation). Expect the same ordering and the same payload ratio rather than the same milliseconds.

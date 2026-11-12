@@ -1,6 +1,6 @@
 package com.example.Blogging_Platform_II.controller.rest;
 
-import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
+import static com.example.Blogging_Platform_II.controller.rest.ApiResponse.ok;
 
 import com.example.Blogging_Platform_II.dto.UserCreate;
 import com.example.Blogging_Platform_II.dto.UserUpdate;
@@ -29,28 +29,28 @@ public class UserController {
     }
 
     @GetMapping
-    ApiEnvelope<List<User>> list() {
+    ApiResponse<List<User>> list() {
         return ok("Users found.", users.list());
     }
 
     @GetMapping("/{id}")
-    ApiEnvelope<User> get(@PathVariable long id) {
+    ApiResponse<User> get(@PathVariable long id) {
         return ok("User found.", users.get(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<User> create(@Valid @RequestBody UserCreate input) {
+    ApiResponse<User> create(@Valid @RequestBody UserCreate input) {
         return ok("User created.", users.create(input.getUsername(), input.getEmail(), input.getDisplayName()));
     }
 
     @PutMapping("/{id}")
-    ApiEnvelope<User> update(@PathVariable long id, @Valid @RequestBody UserUpdate input) {
+    ApiResponse<User> update(@PathVariable long id, @Valid @RequestBody UserUpdate input) {
         return ok("User updated.", users.update(id, input.getEmail(), input.getDisplayName()));
     }
 
     @DeleteMapping("/{id}")
-    ApiEnvelope<Void> delete(@PathVariable long id) {
+    ApiResponse<Void> delete(@PathVariable long id) {
         users.delete(id);
         return ok("User deleted.", null);
     }

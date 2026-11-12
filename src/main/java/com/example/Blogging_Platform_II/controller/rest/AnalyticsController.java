@@ -1,6 +1,6 @@
 package com.example.Blogging_Platform_II.controller.rest;
 
-import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
+import static com.example.Blogging_Platform_II.controller.rest.ApiResponse.ok;
 
 import com.example.Blogging_Platform_II.model.Dashboard;
 import com.example.Blogging_Platform_II.service.AnalyticsService;
@@ -18,7 +18,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/dashboard")
-    ApiEnvelope<Dashboard> dashboard() {
+    ApiResponse<Dashboard> dashboard() {
         return ok("Dashboard calculated.", analytics.dashboard());
     }
 }

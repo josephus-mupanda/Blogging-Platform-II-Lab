@@ -1,6 +1,6 @@
 package com.example.Blogging_Platform_II.controller.rest;
 
-import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
+import static com.example.Blogging_Platform_II.controller.rest.ApiResponse.ok;
 
 import com.example.Blogging_Platform_II.dto.PostInput;
 import com.example.Blogging_Platform_II.model.Post;
@@ -32,28 +32,28 @@ public class PostController {
     }
 
     @GetMapping
-    ApiEnvelope<PostPage> list(@ParameterObject @ModelAttribute PostFilter filter) {
+    ApiResponse<PostPage> list(@ParameterObject @ModelAttribute PostFilter filter) {
         return ok("Posts found.", posts.search(filter));
     }
 
     @GetMapping("/{id}")
-    ApiEnvelope<Post> get(@PathVariable long id) {
+    ApiResponse<Post> get(@PathVariable long id) {
         return ok("Post found.", posts.get(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<Post> create(@RequestParam long authorId, @Valid @RequestBody PostInput input) {
+    ApiResponse<Post> create(@RequestParam long authorId, @Valid @RequestBody PostInput input) {
         return ok("Post created.", posts.create(authorId, input.getTitle(), input.getBody(), input.getTagIds()));
     }
 
     @PutMapping("/{id}")
-    ApiEnvelope<Post> update(@PathVariable long id, @Valid @RequestBody PostInput input) {
+    ApiResponse<Post> update(@PathVariable long id, @Valid @RequestBody PostInput input) {
         return ok("Post updated.", posts.update(id, input.getTitle(), input.getBody(), input.getTagIds()));
     }
 
     @DeleteMapping("/{id}")
-    ApiEnvelope<Void> archive(@PathVariable long id) {
+    ApiResponse<Void> archive(@PathVariable long id) {
         posts.archive(id);
         return ok("Post deleted.", null);
     }

@@ -21,7 +21,7 @@ public class ApiErrors {
     private static final Logger LOG = LoggerFactory.getLogger(ApiErrors.class);
 
     @ExceptionHandler(BlogException.class)
-    public ResponseEntity<ApiEnvelope<Void>> businessError(BlogException exception) {
+    public ResponseEntity<ApiResponse<Void>> businessError(BlogException exception) {
         HttpStatus status;
         if (exception.getCode() == BlogException.Code.NOT_FOUND) {
             status = HttpStatus.NOT_FOUND;
@@ -30,11 +30,11 @@ public class ApiErrors {
         } else {
             status = HttpStatus.BAD_REQUEST;
         }
-        return ResponseEntity.status(status).body(ApiEnvelope.error(exception.getMessage(), null));
+        return ResponseEntity.status(status).body(ApiResponse.error(exception.getMessage(), null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiEnvelope<Map<String, String>>> invalidBody(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> invalidBody(MethodArgumentNotValidException exception) {
         Map<String, String> fields = new LinkedHashMap<>();
         for (FieldError error : exception.getBindingResult().getFieldErrors()) {
             fields.putIfAbsent(error.getField(), error.getDefaultMessage());
@@ -42,24 +42,24 @@ public class ApiErrors {
         for (ObjectError error : exception.getBindingResult().getGlobalErrors()) {
             fields.putIfAbsent("request", error.getDefaultMessage());
         }
-        return ResponseEntity.badRequest().body(ApiEnvelope.error("Check the request fields.", fields));
+        return ResponseEntity.badRequest().body(ApiResponse.error("Check the request fields.", fields));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiEnvelope<Void>> wrongType(MethodArgumentTypeMismatchException exception) {
+    public ResponseEntity<ApiResponse<Void>> wrongType(MethodArgumentTypeMismatchException exception) {
         return ResponseEntity.badRequest()
-                .body(ApiEnvelope.error("The value of '" + exception.getName() + "' is not valid.", null));
+                .body(ApiResponse.error("The value of '" + exception.getName() + "' is not valid.", null));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiEnvelope<Void>> unreadableBody(HttpMessageNotReadableException exception) {
-        return ResponseEntity.badRequest().body(ApiEnvelope.error("The request body could not be read.", null));
+    public ResponseEntity<ApiResponse<Void>> unreadableBody(HttpMessageNotReadableException exception) {
+        return ResponseEntity.badRequest().body(ApiResponse.error("The request body could not be read.", null));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiEnvelope<Void>> unexpected(Exception exception) {
+    public ResponseEntity<ApiResponse<Void>> unexpected(Exception exception) {
         LOG.error("REST request failed", exception);
         return ResponseEntity.internalServerError()
-                .body(ApiEnvelope.error("The request could not be completed.", null));
+                .body(ApiResponse.error("The request could not be completed.", null));
     }
 }

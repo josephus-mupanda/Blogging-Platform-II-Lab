@@ -1,6 +1,6 @@
 package com.example.Blogging_Platform_II.controller.rest;
 
-import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
+import static com.example.Blogging_Platform_II.controller.rest.ApiResponse.ok;
 
 import com.example.Blogging_Platform_II.dto.TagInput;
 import com.example.Blogging_Platform_II.model.Tag;
@@ -28,28 +28,28 @@ public class TagController {
     }
 
     @GetMapping
-    ApiEnvelope<List<Tag>> list() {
+    ApiResponse<List<Tag>> list() {
         return ok("Tags found.", tags.list());
     }
 
     @GetMapping("/{id}")
-    ApiEnvelope<Tag> get(@PathVariable long id) {
+    ApiResponse<Tag> get(@PathVariable long id) {
         return ok("Tag found.", tags.get(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<Tag> create(@Valid @RequestBody TagInput input) {
+    ApiResponse<Tag> create(@Valid @RequestBody TagInput input) {
         return ok("Tag created.", tags.create(input.getName()));
     }
 
     @PutMapping("/{id}")
-    ApiEnvelope<Tag> update(@PathVariable long id, @Valid @RequestBody TagInput input) {
+    ApiResponse<Tag> update(@PathVariable long id, @Valid @RequestBody TagInput input) {
         return ok("Tag updated.", tags.update(id, input.getName()));
     }
 
     @DeleteMapping("/{id}")
-    ApiEnvelope<Void> archive(@PathVariable long id) {
+    ApiResponse<Void> archive(@PathVariable long id) {
         tags.archive(id);
         return ok("Tag deleted.", null);
     }

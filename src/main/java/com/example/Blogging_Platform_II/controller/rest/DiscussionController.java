@@ -1,6 +1,6 @@
 package com.example.Blogging_Platform_II.controller.rest;
 
-import static com.example.Blogging_Platform_II.controller.rest.ApiEnvelope.ok;
+import static com.example.Blogging_Platform_II.controller.rest.ApiResponse.ok;
 
 import com.example.Blogging_Platform_II.dto.CommentInput;
 import com.example.Blogging_Platform_II.dto.ReviewInput;
@@ -32,42 +32,42 @@ public class DiscussionController {
     }
 
     @GetMapping("/comments")
-    ApiEnvelope<List<Comment>> comments(@PathVariable long postId) {
+    ApiResponse<List<Comment>> comments(@PathVariable long postId) {
         return ok("Comments found.", discussion.comments(postId));
     }
 
     @GetMapping("/comments/{id}")
-    ApiEnvelope<Comment> comment(@PathVariable long postId, @PathVariable String id) {
+    ApiResponse<Comment> comment(@PathVariable long postId, @PathVariable String id) {
         return ok("Comment found.", discussion.comment(postId, id));
     }
 
     @PostMapping("/comments")
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<Comment> createComment(@PathVariable long postId, @RequestParam long authorId,
+    ApiResponse<Comment> createComment(@PathVariable long postId, @RequestParam long authorId,
                                        @Valid @RequestBody CommentInput input) {
         return ok("Comment created.", discussion.addComment(postId, authorId, input.getBody()));
     }
 
     @PutMapping("/comments/{id}")
-    ApiEnvelope<Comment> updateComment(@PathVariable long postId, @PathVariable String id,
+    ApiResponse<Comment> updateComment(@PathVariable long postId, @PathVariable String id,
                                        @Valid @RequestBody CommentInput input) {
         return ok("Comment updated.", discussion.editComment(postId, id, input.getBody()));
     }
 
     @DeleteMapping("/comments/{id}")
-    ApiEnvelope<Void> archiveComment(@PathVariable long postId, @PathVariable String id) {
+    ApiResponse<Void> archiveComment(@PathVariable long postId, @PathVariable String id) {
         discussion.archiveComment(postId, id);
         return ok("Comment deleted.", null);
     }
 
     @GetMapping("/reviews")
-    ApiEnvelope<Discussion> reviews(@PathVariable long postId) {
+    ApiResponse<Discussion> reviews(@PathVariable long postId) {
         return ok("Reviews found.", discussion.reviews(postId));
     }
 
     @PostMapping("/reviews")
     @ResponseStatus(HttpStatus.CREATED)
-    ApiEnvelope<Review> createReview(@PathVariable long postId, @RequestParam long reviewerId,
+    ApiResponse<Review> createReview(@PathVariable long postId, @RequestParam long reviewerId,
                                      @Valid @RequestBody ReviewInput input) {
         return ok("Review created.", discussion.addReview(postId, reviewerId, input.getRating(), input.getText()));
     }

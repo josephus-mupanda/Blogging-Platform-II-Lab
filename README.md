@@ -51,7 +51,7 @@ Select a profile with `SPRING_PROFILES_ACTIVE`. Set `DB_POSTGRES_URL`, `DB_POSTG
 
 ## REST
 
-Open Swagger UI at [localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) or import [the OpenAPI JSON](http://localhost:8080/v3/api-docs) into Postman. The REST response envelope has `status`, `message`, and `data`. Creation returns HTTP 201. Validation errors include field messages when available.
+Open Swagger UI at [localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html), or import [docs/postman_collection.json](docs/postman_collection.json) into Postman for a ready set of requests covering REST, GraphQL, and the validation failures. [The OpenAPI JSON](http://localhost:8080/v3/api-docs) can also be imported if you prefer to start from the generated spec. The REST response envelope has `status`, `message`, and `data`, and is produced by `ApiResponse`. Creation returns HTTP 201. Validation errors include field messages when available.
 
 | Routes | Operations |
 |---|---|

@@ -1,0 +1,602 @@
+{
+  "info": {
+    "name": "Blogging Platform II",
+    "description": "REST and GraphQL requests for the Blogging Platform II lab. Import this file into Postman, start the app with .\\mvnw.cmd spring-boot:run, then run the folders from top to bottom. The create requests save their generated IDs into collection variables, so the later requests find them automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "userId", "value": "" },
+    { "key": "tagId", "value": "" },
+    { "key": "postId", "value": "" },
+    { "key": "commentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Users",
+      "item": [
+        {
+          "name": "Create user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save the new user's id so the later requests can use {{userId}}.",
+                  "pm.collectionVariables.set('userId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"author_{{$timestamp}}\",\n  \"email\": \"author_{{$timestamp}}@example.test\",\n  \"displayName\": \"  Demo Author  \"\n}"
+            },
+            "description": "Creates a user. The displayName is padded with spaces on purpose: the response shows it trimmed, because the setter on UserCreate trims it. Expect 201."
+          }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "description": "Expect 200 and the status / message / data envelope."
+          }
+        },
+        {
+          "name": "Get user by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"updated_{{$timestamp}}@example.test\",\n  \"displayName\": \"Updated Author\"\n}"
+            },
+            "description": "Expect 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Tags",
+      "item": [
+        {
+          "name": "Create tag",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.collectionVariables.set('tagId', pm.response.json().data.id);"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/tags", "host": ["{{baseUrl}}"], "path": ["api", "tags"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"  SPRING-{{$timestamp}}  \"\n}" },
+            "description": "The name is sent padded and uppercase. The response shows it trimmed and lowercased, because the setter on TagInput normalises it. Expect 201."
+          }
+        },
+        {
+          "name": "List tags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tags", "host": ["{{baseUrl}}"], "path": ["api", "tags"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Get tag by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "tags", "{{tagId}}"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Update tag",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "tags", "{{tagId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"spring-boot-{{$timestamp}}\"\n}" },
+            "description": "Expect 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Posts",
+      "item": [
+        {
+          "name": "Create post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.collectionVariables.set('postId', pm.response.json().data.id);"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?authorId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [{ "key": "authorId", "value": "{{userId}}" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Layered Spring Boot APIs {{$timestamp}}\",\n  \"body\": \"A post about controllers, services and repositories.\",\n  \"tagIds\": [{{tagId}}]\n}"
+            },
+            "description": "The author is passed as a query parameter because the lab APIs have no login. Expect 201, and the response includes the attached tag."
+          }
+        },
+        {
+          "name": "Get post by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Search posts - keyword, sort, paging",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?keyword=layered&page=0&size=5&sort=TITLE_ASC",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [
+                { "key": "keyword", "value": "layered" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" },
+                { "key": "sort", "value": "TITLE_ASC" }
+              ]
+            },
+            "description": "Case-insensitive keyword search over title and body, backed by the trigram indexes. Sort accepts NEWEST, OLDEST, TITLE_ASC and TITLE_DESC. Expect 200."
+          }
+        },
+        {
+          "name": "Search posts - filter by tag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?tagId={{tagId}}&sort=NEWEST",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [
+                { "key": "tagId", "value": "{{tagId}}" },
+                { "key": "sort", "value": "NEWEST" }
+              ]
+            },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Search posts - filter by author",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?authorId={{userId}}&sort=OLDEST",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [
+                { "key": "authorId", "value": "{{userId}}" },
+                { "key": "sort", "value": "OLDEST" }
+              ]
+            },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Update post",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Layered Spring Boot APIs {{$timestamp}} (edited)\",\n  \"body\": \"Updated body text.\",\n  \"tagIds\": [{{tagId}}]\n}"
+            },
+            "description": "Expect 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Comments (MongoDB)",
+      "item": [
+        {
+          "name": "Add comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.collectionVariables.set('commentId', pm.response.json().data.id);"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/comments?authorId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "comments"],
+              "query": [{ "key": "authorId", "value": "{{userId}}" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"  Great article.  \"\n}" },
+            "description": "This is where the two databases meet. The service checks the post and the author in PostgreSQL, then writes the comment to MongoDB with the author's display name copied in. Note the id is a MongoDB string, not a number. Expect 201."
+          }
+        },
+        {
+          "name": "List comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}/comments", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}", "comments"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Get comment by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}", "comments", "{{commentId}}"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Update comment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}", "comments", "{{commentId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Edited comment.\"\n}" },
+            "description": "Expect 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Reviews (MongoDB)",
+      "item": [
+        {
+          "name": "Add review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/reviews?reviewerId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reviews"],
+              "query": [{ "key": "reviewerId", "value": "{{userId}}" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"text\": \"Helpful.\"\n}" },
+            "description": "Expect 201."
+          }
+        },
+        {
+          "name": "Add the same review again - expect 409",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/reviews?reviewerId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reviews"],
+              "query": [{ "key": "reviewerId", "value": "{{userId}}" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 4,\n  \"text\": \"Second try.\"\n}" },
+            "description": "A user can review a post only once. The unique MongoDB index postId_1_reviewerId_1 rejects this, and the service turns it into HTTP 409."
+          }
+        },
+        {
+          "name": "List reviews with average rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}/reviews", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}", "reviews"] },
+            "description": "Expect 200, with the reviews list and the calculated averageRating."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Analytics",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "dashboard"] },
+            "description": "Counts across both databases in one call. PostgreSQL supplies the users, posts and tags counts plus the list of deleted post ids, and MongoDB counts comments and reviews while excluding those ids. Expect 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. GraphQL",
+      "item": [
+        {
+          "name": "Query - search posts",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query SearchPosts($keyword: String, $size: Int) {\n  posts(filter: { keyword: $keyword, sort: NEWEST, page: 0, size: $size }) {\n    totalElements\n    totalPages\n    items {\n      id\n      title\n      authorId\n      tags { id name }\n    }\n  }\n}",
+                "variables": "{\n  \"keyword\": \"layered\",\n  \"size\": 5\n}"
+              }
+            },
+            "description": "The same search as the REST endpoint, through GraphQL. Remove fields from the selection and send again to see GraphQL return only what was asked for."
+          }
+        },
+        {
+          "name": "Query - single post",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ReadPost($id: ID!) {\n  post(id: $id) {\n    id\n    title\n    body\n    tags { name }\n  }\n}",
+                "variables": "{\n  \"id\": \"{{postId}}\"\n}"
+              }
+            },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Query - comments and reviews of a post",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ReadDiscussion($postId: ID!) {\n  comments(postId: $postId) {\n    id\n    body\n    authorName\n  }\n  reviews(postId: $postId) {\n    averageRating\n    reviews { rating text reviewerName }\n  }\n}",
+                "variables": "{\n  \"postId\": \"{{postId}}\"\n}"
+              }
+            },
+            "description": "One request that reads two MongoDB collections. With REST this would be two calls."
+          }
+        },
+        {
+          "name": "Query - overview and dashboard",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Overview {\n  users { id username displayName }\n  tags { id name }\n  dashboard { users posts tags comments reviews }\n}",
+                "variables": "{}"
+              }
+            },
+            "description": "Three separate REST calls answered in one GraphQL request."
+          }
+        },
+        {
+          "name": "Mutation - create tag",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateTag($input: TagInput!) {\n  createTag(input: $input) { id name }\n}",
+                "variables": "{\n  \"input\": { \"name\": \"graphql-tag-{{$timestamp}}\" }\n}"
+              }
+            },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Mutation - add comment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddComment($postId: ID!, $authorId: ID!, $input: CommentInput!) {\n  addComment(postId: $postId, authorId: $authorId, input: $input) { id body authorName }\n}",
+                "variables": "{\n  \"postId\": \"{{postId}}\",\n  \"authorId\": \"{{userId}}\",\n  \"input\": { \"body\": \"Posted through GraphQL.\" }\n}"
+              }
+            },
+            "description": "Expect 200. The same service runs as for the REST version."
+          }
+        },
+        {
+          "name": "Query - missing post returns an error",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query { post(id: 999999) { id title } }",
+                "variables": "{}"
+              }
+            },
+            "description": "GraphQL always answers 200. Look inside the body: errors[0].extensions.code is NOT_FOUND. This is the same BlogException that REST turns into a 404, formatted by GraphQlErrors."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Validation and error handling",
+      "item": [
+        {
+          "name": "Duplicate username - expect 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"duplicate_me\",\n  \"email\": \"duplicate_{{$timestamp}}@example.test\",\n  \"displayName\": \"Duplicate\"\n}"
+            },
+            "description": "Send this request twice. The first returns 201. The second returns 400 with the message 'This username is already taken.', produced by the custom UniqueAccountValidator, which queries the database."
+          }
+        },
+        {
+          "name": "Invalid email and short username - expect 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"x\",\n  \"email\": \"not-an-email\",\n  \"displayName\": \"\"\n}"
+            },
+            "description": "Plain Bean Validation. The data field of the response lists one message per invalid field."
+          }
+        },
+        {
+          "name": "Empty post title and body - expect 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?authorId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [{ "key": "authorId", "value": "{{userId}}" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"\",\n  \"body\": \"\"\n}" },
+            "description": "Expect 400 from the @NotBlank annotations on PostInput."
+          }
+        },
+        {
+          "name": "Page size over the limit - expect 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?size=500",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [{ "key": "size", "value": "500" }]
+            },
+            "description": "Expect 400. PostService rejects a page size outside 1 to 100 by raising a BlogException."
+          }
+        },
+        {
+          "name": "Rating out of range - expect 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/reviews?reviewerId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reviews"],
+              "query": [{ "key": "reviewerId", "value": "{{userId}}" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 9,\n  \"text\": \"Too high.\"\n}" },
+            "description": "Expect 400 from the @Min(1) and @Max(5) annotations on ReviewInput."
+          }
+        },
+        {
+          "name": "Unknown post - expect 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/999999", "host": ["{{baseUrl}}"], "path": ["api", "posts", "999999"] },
+            "description": "Expect 404 with the message 'Post was not found.'"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Cleanup (run last)",
+      "item": [
+        {
+          "name": "Delete comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}", "comments", "{{commentId}}"] },
+            "description": "A soft delete: deletedAt is set on the MongoDB document and the comment stops appearing. Expect 200."
+          }
+        },
+        {
+          "name": "Delete post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}"] },
+            "description": "Sets deleted_at in PostgreSQL. The comments and reviews stay in MongoDB but are filtered out everywhere. Expect 200."
+          }
+        },
+        {
+          "name": "Get the deleted post - expect 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api", "posts", "{{postId}}"] },
+            "description": "Proves the soft delete hides the post. Expect 404."
+          }
+        },
+        {
+          "name": "Delete tag",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "tags", "{{tagId}}"] },
+            "description": "Expect 200."
+          }
+        },
+        {
+          "name": "Delete user",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "description": "Sets active to false. The user's posts and comments remain readable. Expect 200."
+          }
+        }
+      ]
+    }
+  ]
+}
